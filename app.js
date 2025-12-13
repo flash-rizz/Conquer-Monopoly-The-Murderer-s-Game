@@ -2,6 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo",
     authDomain: "conquer-ff3a6.firebaseapp.com",
+    databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "conquer-ff3a6",
     storageBucket: "conquer-ff3a6.firebasestorage.app",
     messagingSenderId: "172263193906",
