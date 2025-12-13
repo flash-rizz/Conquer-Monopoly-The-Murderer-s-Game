@@ -1,5 +1,4 @@
 // --- CONFIGURATION ---
-// I have filled this with YOUR keys from Image 4.
 const firebaseConfig = {
     apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo",
     authDomain: "conquer-ff3a6.firebaseapp.com",
@@ -11,7 +10,7 @@ const firebaseConfig = {
     measurementId: "G-D1GZTSP2SM"
 };
 
-// Initialize Firebase (This is the specific line that fixes the connection)
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -19,7 +18,7 @@ const db = firebase.database();
 let myName = "";
 let roomCode = "";
 let myRole = "Civilian";
-let myCash = 15000; 
+let myCash = 15000;
 let myId = ""; 
 
 // --- DATA LISTS ---
@@ -29,13 +28,11 @@ const chestCards = [
     "Bad Investment (Roll % die to lose cash)", "Go to Start (No Salary)", 
     "Gambling is Haram (Lose % cash)"
 ];
-
 const powerCards = [
     "Reverse Move by 1", "Just Say No", "Move Forward 2/3", 
     "Force Player to Buy Property", "Interest Time (Force Rent Pay)", 
     "Health +1", "Invisible Spell (Hide 1 Night)"
 ];
-
 const murderQuestions = [
     {q: "Is the murderer wearing glasses?", a: "Yes/No"},
     {q: "Does the murderer own a red property?", a: "Yes/No"},
@@ -44,36 +41,138 @@ const murderQuestions = [
     {q: "Does the murderer have more than 5k cash?", a: "Yes/No"}
 ];
 
-// --- CORE FUNCTIONS ---
+// --- NAVIGATION FUNCTIONS ---
 
-function joinGame() {
-    const nameInput = document.getElementById('username').value;
-    const roomInput = document.getElementById('room-code').value;
+function showCreate() {
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('create-screen').classList.remove('hidden');
+}
 
-    if (!nameInput || !roomInput) return alert("Fill in all fields");
+function showJoin() {
+    document.getElementById('menu-screen').classList.add('hidden');
+    document.getElementById('join-screen').classList.remove('hidden');
+}
 
-    myName = nameInput.toUpperCase();
-    roomCode = roomInput.toUpperCase();
-    myId = myName + "_" + Math.floor(Math.random() * 1000);
+function backToMenu() {
+    document.getElementById('create-screen').classList.add('hidden');
+    document.getElementById('join-screen').classList.add('hidden');
+    document.getElementById('menu-screen').classList.remove('hidden');
+}
 
-    // Create player entry in DB
-    const playerRef = db.ref(`games/${roomCode}/players/${myId}`);
-    playerRef.set({
-        name: myName,
-        cash: 15000,
-        role: "Civilian", 
-        lands: [],
-        powerCards: []
-    }, (error) => {
-        if (error) {
-            alert("Database Error: " + error.message);
+// --- CORE GAME LOGIC ---
+
+// 1. CREATE A NEW SESSION
+function createGame() {
+    const name = document.getElementById('c-name').value.toUpperCase().trim();
+    const room = document.getElementById('c-room').value.toUpperCase().trim();
+    const limit = parseInt(document.getElementById('c-limit').value);
+
+    if (!name || !room || !limit) return alert("Please fill all fields!");
+
+    // Set up the Game Settings FIRST
+    const gameRef = db.ref(`games/${room}`);
+    
+    gameRef.once('value', snapshot => {
+        if (snapshot.exists()) {
+            alert("Room already exists! Please use Join or pick another code.");
         } else {
-            console.log("Data saved successfully!");
+            // Pick a random number between 1 and Limit to be the Murderer
+            const murdererIndex = Math.floor(Math.random() * limit) + 1;
+            
+            gameRef.child('settings').set({
+                playerLimit: limit,
+                murdererIndex: murdererIndex,
+                playerCount: 0
+            }).then(() => {
+                // Now join the game as the creator
+                enterGameLoop(name, room);
+            });
         }
     });
+}
 
-    // Listen to my own data changes
-    playerRef.on('value', snapshot => {
+// 2. JOIN EXISTING SESSION
+function joinGame() {
+    const name = document.getElementById('j-name').value.toUpperCase().trim();
+    const room = document.getElementById('j-room').value.toUpperCase().trim();
+
+    if (!name || !room) return alert("Fill in Name and Room!");
+
+    db.ref(`games/${room}/settings`).once('value', snapshot => {
+        if (!snapshot.exists()) {
+            return alert("Room does not exist! Go back and Create it first.");
+        }
+        enterGameLoop(name, room);
+    });
+}
+
+// 3. THE LOGIC TO ENTER/RESUME
+function enterGameLoop(name, room) {
+    myName = name;
+    roomCode = room;
+    // Use NAME as ID so re-joining works (Remove special chars to be safe)
+    myId = myName.replace(/[^A-Z0-9]/g, ''); 
+
+    const playerRef = db.ref(`games/${roomCode}/players/${myId}`);
+    const settingsRef = db.ref(`games/${roomCode}/settings`);
+
+    playerRef.once('value', snapshot => {
+        if (snapshot.exists()) {
+            // SCENARIO A: RESUMING GAME (Switch Device / Reload)
+            console.log("Welcome back!");
+            setupRealtimeListener();
+            document.getElementById('create-screen').classList.add('hidden');
+            document.getElementById('join-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+        } else {
+            // SCENARIO B: NEW PLAYER JOINING
+            // We need a transaction to safely increment player count
+            settingsRef.transaction(currentSettings => {
+                if (currentSettings) {
+                    if (currentSettings.playerCount < currentSettings.playerLimit) {
+                        currentSettings.playerCount++;
+                        return currentSettings;
+                    } else {
+                        // Game is full
+                        return; // Abort transaction
+                    }
+                }
+                return currentSettings;
+            }, (error, committed, snapshot) => {
+                if (error) {
+                    alert("Error joining.");
+                } else if (!committed) {
+                    alert("Game is Full!");
+                } else {
+                    // Success! We reserved a spot. Now assign Role.
+                    const newCount = snapshot.val().playerCount;
+                    const murdererTarget = snapshot.val().murdererIndex;
+                    
+                    const assignedRole = (newCount === murdererTarget) ? "Murderer" : "Civilian";
+
+                    // Save New Player Data
+                    playerRef.set({
+                        name: myName,
+                        cash: 15000,
+                        role: assignedRole,
+                        lands: [],
+                        powerCards: [],
+                        joinOrder: newCount
+                    });
+
+                    setupRealtimeListener();
+                    document.getElementById('create-screen').classList.add('hidden');
+                    document.getElementById('join-screen').classList.add('hidden');
+                    document.getElementById('game-screen').classList.remove('hidden');
+                }
+            });
+        }
+    });
+}
+
+function setupRealtimeListener() {
+    // Listen to my own data
+    db.ref(`games/${roomCode}/players/${myId}`).on('value', snapshot => {
         const data = snapshot.val();
         if (data) {
             myCash = data.cash;
@@ -89,12 +188,9 @@ function joinGame() {
         li.innerText = msg;
         document.getElementById('game-log').prepend(li);
     });
-
-    document.getElementById('login-screen').classList.add('hidden');
-    document.getElementById('game-screen').classList.remove('hidden');
-    
-    checkForFirstPlayer();
 }
+
+// --- UI UPDATES & ACTIONS ---
 
 function updateUI(data) {
     document.getElementById('player-name-display').innerText = data.name;
@@ -110,8 +206,6 @@ function toggleRole() {
     const el = document.getElementById('role-display');
     el.classList.toggle('blur');
 }
-
-// --- ACTIONS & MODALS ---
 
 function openModal(type) {
     const overlay = document.getElementById('modal-overlay');
@@ -162,8 +256,6 @@ function closeModal() {
     document.getElementById('modal-overlay').classList.add('hidden');
 }
 
-// --- LOGIC FUNCTIONS ---
-
 function confirmPay() {
     const targetId = document.getElementById('pay-target').value;
     const amount = parseInt(document.getElementById('pay-amount').value);
@@ -210,36 +302,6 @@ function drawCard(type) {
 
 function logEvent(msg) {
     db.ref(`games/${roomCode}/log`).push(msg);
-}
-
-// --- MURDERER HINT LOGIC ---
-
-function checkForFirstPlayer() {
-    db.ref(`games/${roomCode}/players`).once('value', snap => {
-        if (snap.exists() && Object.keys(snap.val()).length === 1) {
-            const btn = document.createElement('button');
-            btn.innerText = "ADMIN: Assign Roles";
-            btn.style.background = "purple";
-            btn.style.color = "white";
-            btn.onclick = assignRoles;
-            document.querySelector('.stats-bar').appendChild(btn);
-        }
-    });
-}
-
-function assignRoles() {
-    db.ref(`games/${roomCode}/players`).once('value', snap => {
-        const players = [];
-        snap.forEach(child => players.push(child.key));
-        const murdererId = players[Math.floor(Math.random() * players.length)];
-        
-        players.forEach(pid => {
-            const role = (pid === murdererId) ? "Murderer" : "Civilian";
-            db.ref(`games/${roomCode}/players/${pid}/role`).set(role);
-        });
-        
-        logEvent("ROLES HAVE BEEN ASSIGNED. Check your secret identity!");
-    });
 }
 
 function triggerHintSelection() {

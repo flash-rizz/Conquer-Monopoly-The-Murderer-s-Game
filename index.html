@@ -10,11 +10,27 @@
 </head>
 <body>
 
-    <div id="login-screen">
+    <div id="menu-screen">
         <h1>Conquer Monopoly</h1>
-        <input type="text" id="username" placeholder="Enter your name">
-        <input type="text" id="room-code" placeholder="Room Code (e.g. ROOM1)">
-        <button onclick="joinGame()">Join / Create Game</button>
+        <button class="btn-action" style="width:80%" onclick="showCreate()">Create New Game</button>
+        <button class="btn-action" style="width:80%" onclick="showJoin()">Join Existing Game</button>
+    </div>
+
+    <div id="create-screen" class="hidden">
+        <h2>Create Game</h2>
+        <input type="text" id="c-name" placeholder="Your Name">
+        <input type="text" id="c-room" placeholder="Room Code (e.g. 123)">
+        <input type="number" id="c-limit" placeholder="Total Players (e.g. 4)">
+        <button onclick="createGame()">Start Session</button>
+        <button class="btn-close" onclick="backToMenu()">Back</button>
+    </div>
+
+    <div id="join-screen" class="hidden">
+        <h2>Join Game</h2>
+        <input type="text" id="j-name" placeholder="Your Name">
+        <input type="text" id="j-room" placeholder="Room Code">
+        <button onclick="joinGame()">Enter Lobby</button>
+        <button class="btn-close" onclick="backToMenu()">Back</button>
     </div>
 
     <div id="game-screen" class="hidden">
@@ -25,7 +41,7 @@
         </div>
 
         <div class="secret-section" onclick="toggleRole()">
-            <span>Tap to view Role</span>
+            <span>Tap to view Role: </span>
             <span id="role-display" class="blur">???</span>
         </div>
 
