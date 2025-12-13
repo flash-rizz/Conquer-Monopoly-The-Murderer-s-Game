@@ -1,0 +1,90 @@
+body {
+    background-color: #1a1a1a;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    margin: 0;
+    padding: 20px;
+    text-align: center;
+}
+
+.hidden { display: none; }
+.blur { filter: blur(5px); user-select: none; }
+
+input, select {
+    padding: 10px;
+    margin: 10px 0;
+    width: 80%;
+    background: #333;
+    border: 1px solid #555;
+    color: white;
+    font-size: 16px;
+}
+
+button {
+    background: #d4af37; /* Gold */
+    color: black;
+    border: none;
+    padding: 15px;
+    margin: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.btn-action { width: 45%; height: 80px; vertical-align: top; }
+.btn-danger { background: #ff4444; color: white; width: 100%; }
+.btn-close { background: #555; color: white; margin-top: 10px;}
+
+.grid-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.stats-bar {
+    background: #333;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 20px;
+    font-weight: bold;
+    border: 1px solid #d4af37;
+}
+
+.secret-section {
+    margin: 20px 0;
+    padding: 10px;
+    background: #220000;
+    border: 1px dashed red;
+    cursor: pointer;
+}
+
+#game-log {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    max-height: 200px;
+    overflow-y: scroll;
+    background: #222;
+    border: 1px solid #444;
+}
+
+#game-log li {
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+}
+
+.modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: #222;
+    padding: 20px;
+    border: 2px solid #d4af37;
+    z-index: 100;
+    width: 80%;
+}
