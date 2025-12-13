@@ -1,4 +1,5 @@
 // --- CONFIGURATION ---
+// I have filled this with YOUR keys from Image 4.
 const firebaseConfig = {
     apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo",
     authDomain: "conquer-ff3a6.firebaseapp.com",
@@ -10,7 +11,7 @@ const firebaseConfig = {
     measurementId: "G-D1GZTSP2SM"
 };
 
-// Initialize Firebase
+// Initialize Firebase (This is the specific line that fixes the connection)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -18,7 +19,7 @@ const db = firebase.database();
 let myName = "";
 let roomCode = "";
 let myRole = "Civilian";
-let myCash = 15000; // Starting Amount
+let myCash = 15000; 
 let myId = ""; 
 
 // --- DATA LISTS ---
@@ -46,11 +47,13 @@ const murderQuestions = [
 // --- CORE FUNCTIONS ---
 
 function joinGame() {
-    myName = document.getElementById('username').value.toUpperCase();
-    roomCode = document.getElementById('room-code').value.toUpperCase();
+    const nameInput = document.getElementById('username').value;
+    const roomInput = document.getElementById('room-code').value;
 
-    if (!myName || !roomCode) return alert("Fill in all fields");
+    if (!nameInput || !roomInput) return alert("Fill in all fields");
 
+    myName = nameInput.toUpperCase();
+    roomCode = roomInput.toUpperCase();
     myId = myName + "_" + Math.floor(Math.random() * 1000);
 
     // Create player entry in DB
@@ -58,9 +61,15 @@ function joinGame() {
     playerRef.set({
         name: myName,
         cash: 15000,
-        role: "Civilian", // Default, will change later
+        role: "Civilian", 
         lands: [],
         powerCards: []
+    }, (error) => {
+        if (error) {
+            alert("Database Error: " + error.message);
+        } else {
+            console.log("Data saved successfully!");
+        }
     });
 
     // Listen to my own data changes
@@ -84,7 +93,6 @@ function joinGame() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
     
-    // Check if I am the first player (Host triggers role assignment later)
     checkForFirstPlayer();
 }
 
@@ -93,7 +101,6 @@ function updateUI(data) {
     document.getElementById('cash-display').innerText = `RM ${data.cash}`;
     document.getElementById('role-display').innerText = data.role;
     
-    // Show Murderer controls if applicable
     if (data.role === "Murderer") {
         document.getElementById('murderer-zone').classList.remove('hidden');
     }
@@ -115,7 +122,6 @@ function openModal(type) {
 
     if (type === 'pay') {
         title.innerText = "Pay Player";
-        // Fetch players to populate dropdown
         db.ref(`games/${roomCode}/players`).once('value', snap => {
             let html = `<select id="pay-target"><option value="">Select Player</option>`;
             snap.forEach(p => {
@@ -143,7 +149,6 @@ function openModal(type) {
     }
     else if (type === 'inventory') {
         title.innerText = "My Inventory";
-        // Fetch current data
         db.ref(`games/${roomCode}/players/${myId}`).once('value', snap => {
             const p = snap.val();
             let lands = p.lands ? Object.values(p.lands).join(', ') : "None";
@@ -165,10 +170,7 @@ function confirmPay() {
     
     if (!targetId || !amount) return;
 
-    // Deduct from me
     db.ref(`games/${roomCode}/players/${myId}/cash`).set(myCash - amount);
-    
-    // Add to target
     db.ref(`games/${roomCode}/players/${targetId}/cash`).transaction(current => (current || 0) + amount);
 
     logEvent(`${myName} paid RM${amount} to another player.`);
@@ -188,8 +190,6 @@ function updateBank(multiplier) {
 
 function confirmLand() {
     const landNum = document.getElementById('land-id').value;
-    // In a full app, we would check if land is taken globally. 
-    // For honesty system, we just add it to player inventory.
     db.ref(`games/${roomCode}/players/${myId}/lands`).push(`Land #${landNum}`);
     logEvent(`${myName} claimed Land #${landNum}`);
     closeModal();
@@ -202,10 +202,8 @@ function drawCard(type) {
     alert(`You drew: ${card}`);
     
     if (type === 'power') {
-        // Save to inventory
         db.ref(`games/${roomCode}/players/${myId}/powerCards`).push(card);
     } else {
-        // Chest cards usually act immediately
         logEvent(`${myName} drew a Chest Card: ${card}`);
     }
 }
@@ -217,9 +215,8 @@ function logEvent(msg) {
 // --- MURDERER HINT LOGIC ---
 
 function checkForFirstPlayer() {
-    // A simple way to assign roles: First player adds a "Assign Roles" button to their UI
     db.ref(`games/${roomCode}/players`).once('value', snap => {
-        if (Object.keys(snap.val()).length === 1) {
+        if (snap.exists() && Object.keys(snap.val()).length === 1) {
             const btn = document.createElement('button');
             btn.innerText = "ADMIN: Assign Roles";
             btn.style.background = "purple";
@@ -234,8 +231,6 @@ function assignRoles() {
     db.ref(`games/${roomCode}/players`).once('value', snap => {
         const players = [];
         snap.forEach(child => players.push(child.key));
-        
-        // Randomly pick one murderer
         const murdererId = players[Math.floor(Math.random() * players.length)];
         
         players.forEach(pid => {
@@ -248,7 +243,6 @@ function assignRoles() {
 }
 
 function triggerHintSelection() {
-    // Get 3 random questions
     const options = [];
     while(options.length < 3) {
         const q = murderQuestions[Math.floor(Math.random() * murderQuestions.length)];
@@ -263,7 +257,6 @@ function triggerHintSelection() {
         const btn = document.createElement('button');
         btn.innerText = opt.q;
         btn.onclick = () => {
-            // Murderer selects this, prompt for Answer
             const ans = prompt(`Answer this for the public: ${opt.q} (${opt.a})`);
             if(ans) {
                 logEvent(`🕵️ MURDERER HINT: "${opt.q}" - Answer: ${ans}`);
