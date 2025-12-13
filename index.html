@@ -2,78 +2,525 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Conquer Monopoly</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        app: {
+                            bg: '#101010',       
+                            card: '#1C1C1E',     
+                            input: '#2C2C2E',    
+                            accent: '#6366F1',   
+                            danger: '#EF4444',   
+                            success: '#10B981',  
+                            text: '#FFFFFF',
+                            muted: '#9CA3AF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body::-webkit-scrollbar { display: none; }
+        .blur-secret { filter: blur(12px); user-select: none; }
+        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+        /* Modal Animation */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s ease-out; }
+        .modal-exit { opacity: 1; transform: scale(1); }
+        .modal-exit-active { opacity: 0; transform: scale(0.95); transition: all 0.2s ease-in; }
+    </style>
 </head>
-<body>
+<body class="bg-app-bg text-app-text min-h-screen font-sans antialiased pb-24">
 
-    <div id="menu-screen">
-        <h1>Conquer Monopoly</h1>
-        <button class="btn-action" style="width:80%" onclick="showCreate()">Create New Game</button>
-        <button class="btn-action" style="width:80%" onclick="showJoin()">Join Existing Game</button>
+    <main id="app-container" class="max-w-md mx-auto min-h-screen relative flex flex-col p-4">
+
+        <div id="view-home" class="flex flex-col flex-1 justify-center items-center space-y-8 animate-fade-in">
+            <div class="text-center space-y-2">
+                <div class="w-20 h-20 bg-app-card rounded-2xl mx-auto flex items-center justify-center border border-white/10 shadow-2xl mb-6">
+                    <span class="material-icons-round text-5xl text-app-accent">casino</span>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight">Conquer</h1>
+                <p class="text-app-muted text-sm uppercase tracking-widest font-medium">Murder Mystery Monopoly</p>
+            </div>
+
+            <div class="w-full space-y-3">
+                <button onclick="switchView('view-create')" class="w-full bg-app-accent hover:bg-indigo-500 active:scale-95 transition-all py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20">
+                    Create New Game
+                </button>
+                <button onclick="switchView('view-join')" class="w-full bg-app-card border border-white/10 hover:bg-white/5 active:scale-95 transition-all py-4 rounded-xl font-semibold text-lg text-app-muted hover:text-white">
+                    Join Game
+                </button>
+            </div>
+        </div>
+
+        <div id="view-create" class="hidden flex-col flex-1 pt-4">
+            <div class="flex items-center justify-between mb-8">
+                <button onclick="switchView('view-home')" class="p-2 -ml-2 text-app-muted hover:text-white"><span class="material-icons-round">arrow_back_ios</span></button>
+                <h2 class="text-lg font-semibold">Game Setup</h2>
+                <div class="w-8"></div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-app-card rounded-2xl overflow-hidden border border-white/5">
+                    <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                        <span class="text-sm font-medium text-app-muted">Host Name</span>
+                        <input id="create-name" type="text" placeholder="Enter Name" class="bg-transparent text-right focus:outline-none placeholder-gray-600 font-medium text-white w-1/2 uppercase">
+                    </div>
+                    <div class="p-4 flex items-center justify-between">
+                        <span class="text-sm font-medium text-app-muted">Room Code</span>
+                        <input id="create-room" type="text" placeholder="ROOM1" class="bg-transparent text-right focus:outline-none text-app-accent font-bold w-1/2 uppercase">
+                    </div>
+                </div>
+
+                <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-app-accent">
+                            <span class="material-icons-round">groups</span>
+                        </div>
+                        <span class="font-medium">Total Players</span>
+                    </div>
+                    <div class="flex items-center gap-3 bg-app-input rounded-lg p-1">
+                        <button onclick="adjustCount(-1)" class="w-8 h-8 flex items-center justify-center text-white hover:bg-white/10 rounded-md">-</button>
+                        <span id="player-count-display" class="font-bold w-4 text-center">4</span>
+                        <button onclick="adjustCount(1)" class="w-8 h-8 flex items-center justify-center text-white hover:bg-white/10 rounded-md">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-6">
+                <button onclick="handleCreateGame()" class="w-full bg-app-accent py-4 rounded-xl font-bold text-lg shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform">
+                    Start Session
+                </button>
+            </div>
+        </div>
+
+        <div id="view-join" class="hidden flex-col flex-1 pt-4">
+            <div class="flex items-center justify-between mb-8">
+                <button onclick="switchView('view-home')" class="p-2 -ml-2 text-app-muted hover:text-white"><span class="material-icons-round">arrow_back_ios</span></button>
+                <h2 class="text-lg font-semibold">Join Lobby</h2>
+                <div class="w-8"></div>
+            </div>
+
+            <div class="bg-app-card rounded-2xl overflow-hidden border border-white/5">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-sm font-medium text-app-muted">Room Code</span>
+                    <input id="join-room" type="text" placeholder="ABCD" class="bg-transparent text-right focus:outline-none placeholder-gray-600 font-bold text-white uppercase w-1/2">
+                </div>
+                <div class="p-4 flex items-center justify-between">
+                    <span class="text-sm font-medium text-app-muted">Your Name</span>
+                    <input id="join-name" type="text" placeholder="Name" class="bg-transparent text-right focus:outline-none placeholder-gray-600 font-medium text-white w-1/2 uppercase">
+                </div>
+            </div>
+
+            <div class="mt-auto pt-6">
+                <button onclick="handleJoinGame()" class="w-full bg-white text-black py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-transform">
+                    Enter Game
+                </button>
+            </div>
+        </div>
+
+        <div id="view-game" class="hidden flex-col flex-1 pt-2">
+            
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="confirmExit()" class="p-2 -ml-2 rounded-full hover:bg-white/10 text-white flex items-center gap-1 transition-colors">
+                    <span class="material-icons-round">arrow_back</span>
+                    <span class="text-xs font-bold uppercase tracking-wide">Exit</span>
+                </button>
+                
+                <div class="flex gap-2">
+                     <div class="bg-app-input px-3 py-1 rounded-full text-xs font-medium text-app-muted border border-white/5">
+                        Room: <span id="display-room-code" class="text-white">...</span>
+                    </div>
+                    <div id="display-cash-badge" class="bg-app-input px-3 py-1 rounded-full text-xs font-medium text-app-success border border-white/5">
+                        RM 0
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mb-6 relative group cursor-pointer tap-highlight-transparent" onclick="toggleRole()">
+                <div class="bg-app-card border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl transition-all duration-300 active:scale-95">
+                    <div id="secret-layer" class="transition-all duration-500 blur-secret opacity-50">
+                        <div class="w-24 h-24 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border-4 border-app-bg">
+                            <span id="role-icon" class="material-icons-round text-6xl text-black">person</span> 
+                        </div>
+                        <h3 id="role-name" class="text-3xl font-bold text-white mb-2">Civilian</h3>
+                        <div class="flex justify-center gap-3 mt-4">
+                            <div class="bg-app-bg/50 px-3 py-2 rounded-lg border border-white/5">
+                                <span class="block text-xs text-app-muted mb-1">Goal</span>
+                                <span id="role-goal" class="text-sm font-bold text-white">Survive</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="reveal-text" class="absolute inset-0 flex items-center justify-center flex-col z-10 pointer-events-none transition-opacity duration-300">
+                        <span class="material-icons-round text-4xl text-white/50 mb-2">visibility_off</span>
+                        <span class="text-sm font-bold tracking-widest uppercase text-white/50">Tap to Reveal</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="openInventory()" class="w-full mb-6 bg-app-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 active:scale-95 transition-all group">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400">
+                        <span class="material-icons-round">business_center</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="block font-bold text-sm">My Inventory</span>
+                        <span class="block text-xs text-app-muted">View Assets & Use Power Cards</span>
+                    </div>
+                </div>
+                <span class="material-icons-round text-app-muted group-hover:translate-x-1 transition-transform">chevron_right</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="performAction('pay')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 transition-colors flex flex-col items-center gap-2 group">
+                    <span class="material-icons-round text-app-success group-hover:scale-110 transition-transform">payments</span>
+                    <span class="text-xs font-bold">Pay Player</span>
+                </button>
+                <button onclick="performAction('bank')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 transition-colors flex flex-col items-center gap-2 group">
+                    <span class="material-icons-round text-app-danger group-hover:scale-110 transition-transform">account_balance</span>
+                    <span class="text-xs font-bold">Bank</span>
+                </button>
+                <button onclick="performAction('chest')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 transition-colors flex flex-col items-center gap-2 group">
+                    <span class="material-icons-round text-yellow-400 group-hover:scale-110 transition-transform">inventory_2</span>
+                    <span class="text-xs font-bold">Chest</span>
+                </button>
+                <button onclick="performAction('land')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 transition-colors flex flex-col items-center gap-2 group">
+                    <span class="material-icons-round text-blue-400 group-hover:scale-110 transition-transform">flag</span>
+                    <span class="text-xs font-bold">Claim Land</span>
+                </button>
+            </div>
+
+            <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col">
+                <div class="flex items-center gap-2 mb-3 opacity-50">
+                    <span class="material-icons-round text-sm">history</span>
+                    <span class="text-xs font-bold uppercase tracking-wide">Game Feed</span>
+                </div>
+                <div id="game-feed-list" class="space-y-3 overflow-y-auto text-xs flex-1">
+                    </div>
+            </div>
+            
+            <div id="murderer-controls" class="hidden mt-4">
+                <button onclick="triggerHint()" class="w-full border border-app-danger/30 text-app-danger bg-app-danger/10 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
+                    <span class="material-icons-round text-sm">psychology</span> Issue Hint
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="modal-inventory" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex-col justify-end">
+        <div class="bg-[#18181b] rounded-t-3xl p-6 h-[80vh] flex flex-col border-t border-white/10 shadow-2xl animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-white">My Assets</h2>
+                <button onclick="closeInventory()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-app-muted mb-3">Power Cards</h3>
+                <div id="inventory-powers" class="space-y-3">
+                    <div class="text-sm text-gray-500 italic">No power cards yet.</div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-app-muted mb-3">Properties</h3>
+                <div id="inventory-lands" class="grid grid-cols-2 gap-3">
+                    <div class="text-sm text-gray-500 italic col-span-2">No properties owned.</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="create-screen" class="hidden">
-        <h2>Create Game</h2>
-        <input type="text" id="c-name" placeholder="Your Name">
-        <input type="text" id="c-room" placeholder="Room Code (e.g. 123)">
-        <input type="number" id="c-limit" placeholder="Total Players (e.g. 4)">
-        <button onclick="createGame()">Start Session</button>
-        <button class="btn-close" onclick="backToMenu()">Back</button>
-    </div>
+    <script>
+        // CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo",
+            authDomain: "conquer-ff3a6.firebaseapp.com",
+            databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "conquer-ff3a6",
+            storageBucket: "conquer-ff3a6.firebasestorage.app",
+            messagingSenderId: "172263193906",
+            appId: "1:172263193906:web:f2c43b9b02cb421e0feb2b",
+            measurementId: "G-D1GZTSP2SM"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    <div id="join-screen" class="hidden">
-        <h2>Join Game</h2>
-        <input type="text" id="j-name" placeholder="Your Name">
-        <input type="text" id="j-room" placeholder="Room Code">
-        <button onclick="joinGame()">Enter Lobby</button>
-        <button class="btn-close" onclick="backToMenu()">Back</button>
-    </div>
+        // STATE
+        let myName = "";
+        let roomCode = "";
+        let myRole = "Civilian";
+        let myCash = 15000;
+        let setupPlayerCount = 4;
 
-    <div id="game-screen" class="hidden">
-        
-        <div class="stats-bar">
-            <div id="player-name-display">Player</div>
-            <div id="cash-display">RM 0</div>
-        </div>
+        // --- NAVIGATION ---
+        function switchView(viewId) {
+            ['view-home', 'view-create', 'view-join', 'view-game'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('flex');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+            document.getElementById(viewId).classList.add('flex');
+        }
 
-        <div class="secret-section" onclick="toggleRole()">
-            <span>Tap to view Role: </span>
-            <span id="role-display" class="blur">???</span>
-        </div>
+        // 1) EXIT LOGIC
+        function confirmExit() {
+            if(confirm("Leave current game and return to menu?")) {
+                // Optional: Remove listener here if needed
+                switchView('view-home');
+            }
+        }
 
-        <div class="grid-menu">
-            <button class="btn-action" onclick="openModal('pay')">💸 Pay Player</button>
-            <button class="btn-action" onclick="openModal('bank')">🏦 Pay/Take Bank</button>
-            <button class="btn-action" onclick="openModal('land')">🚩 Claim Land</button>
-            <button class="btn-action" onclick="drawCard('chest')">📦 Chest Card</button>
-            <button class="btn-action" onclick="drawCard('power')">⚡ Power Card</button>
-            <button class="btn-action" onclick="openModal('inventory')">🎒 My Assets</button>
-        </div>
+        function toggleRole() {
+            const layer = document.getElementById('secret-layer');
+            const text = document.getElementById('reveal-text');
+            if (layer.classList.contains('blur-secret')) {
+                layer.classList.remove('blur-secret', 'opacity-50');
+                text.classList.add('opacity-0');
+            } else {
+                layer.classList.add('blur-secret', 'opacity-50');
+                text.classList.remove('opacity-0');
+            }
+        }
 
-        <div id="murderer-zone" class="hidden">
-            <h3>🔪 Murderer Controls</h3>
-            <button class="btn-danger" onclick="triggerHintSelection()">Generate Hint Options</button>
-            <div id="hint-options" class="hidden"></div>
-        </div>
+        function adjustCount(change) {
+            setupPlayerCount += change;
+            if (setupPlayerCount < 3) setupPlayerCount = 3;
+            if (setupPlayerCount > 8) setupPlayerCount = 8;
+            document.getElementById('player-count-display').innerText = setupPlayerCount;
+        }
 
-        <div class="feed-section">
-            <h3>📢 Public Log & Hints</h3>
-            <ul id="game-log"></ul>
-        </div>
-    </div>
+        // --- INVENTORY LOGIC (NEW) ---
+        function openInventory() {
+            document.getElementById('modal-inventory').classList.remove('hidden');
+            document.getElementById('modal-inventory').classList.add('flex');
+            
+            // Fetch Lands
+            db.ref(`games/${roomCode}/players/${myName}/lands`).once('value', snap => {
+                const landContainer = document.getElementById('inventory-lands');
+                landContainer.innerHTML = '';
+                if(snap.exists()) {
+                    const lands = snap.val();
+                    Object.values(lands).forEach(landName => {
+                        landContainer.innerHTML += `
+                            <div class="bg-app-input p-3 rounded-lg border border-white/5 text-sm font-bold text-white flex items-center gap-2">
+                                <span class="material-icons-round text-blue-400 text-sm">flag</span> ${landName}
+                            </div>`;
+                    });
+                } else {
+                    landContainer.innerHTML = '<div class="text-sm text-gray-500 italic col-span-2">No properties owned.</div>';
+                }
+            });
 
-    <div id="modal-overlay" class="hidden">
-        <div class="modal">
-            <h2 id="modal-title">Action</h2>
-            <div id="modal-content"></div>
-            <button class="btn-close" onclick="closeModal()">Cancel</button>
-        </div>
-    </div>
+            // Fetch Power Cards
+            db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
+                const cardContainer = document.getElementById('inventory-powers');
+                cardContainer.innerHTML = '';
+                if(snap.exists()) {
+                    const cards = snap.val();
+                    Object.keys(cards).forEach(key => {
+                        const cardName = cards[key];
+                        cardContainer.innerHTML += `
+                            <div class="bg-app-card p-3 rounded-xl border border-white/10 flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-icons-round text-yellow-400">bolt</span>
+                                    <span class="font-bold text-sm">${cardName}</span>
+                                </div>
+                                <button onclick="usePowerCard('${key}', '${cardName}')" class="bg-app-accent hover:bg-indigo-500 text-xs font-bold px-3 py-2 rounded-lg transition-colors">
+                                    USE
+                                </button>
+                            </div>`;
+                    });
+                } else {
+                    cardContainer.innerHTML = '<div class="text-sm text-gray-500 italic">No power cards. Draw from Chest!</div>';
+                }
+            });
+        }
 
-    <script src="app.js"></script>
+        function closeInventory() {
+            document.getElementById('modal-inventory').classList.add('hidden');
+            document.getElementById('modal-inventory').classList.remove('flex');
+        }
+
+        // 3) DO BUTTON LOGIC
+        function usePowerCard(key, cardName) {
+            if(confirm(`Use "${cardName}" now?`)) {
+                // Remove from Inventory
+                db.ref(`games/${roomCode}/players/${myName}/powerCards/${key}`).remove();
+                // Announce to Game
+                logEvent(`⚡ ${myName} used Power Card: ${cardName}`);
+                // Refresh Inventory UI
+                openInventory(); 
+            }
+        }
+
+        // --- FIREBASE CORE ---
+
+        function handleCreateGame() {
+            const nameInput = document.getElementById('create-name').value.trim().toUpperCase();
+            const roomInput = document.getElementById('create-room').value.trim().toUpperCase();
+            if (!nameInput || !roomInput) return alert("Enter Name and Room Code");
+            
+            const roomRef = db.ref(`games/${roomInput}`);
+            roomRef.once('value', snapshot => {
+                if (snapshot.exists()) {
+                    alert("Room Code taken!");
+                } else {
+                    const killerSlot = Math.floor(Math.random() * setupPlayerCount);
+                    roomRef.child('settings').set({ maxPlayers: setupPlayerCount, murdererSlot: killerSlot, currentCount: 0 });
+                    joinGameProcess(nameInput, roomInput);
+                }
+            });
+        }
+
+        function handleJoinGame() {
+            const nameInput = document.getElementById('join-name').value.trim().toUpperCase();
+            const roomInput = document.getElementById('join-room').value.trim().toUpperCase();
+            if (!nameInput || !roomInput) return alert("Enter Name and Room Code");
+            joinGameProcess(nameInput, roomInput);
+        }
+
+        function joinGameProcess(name, room) {
+            myName = name; roomCode = room;
+            const roomRef = db.ref(`games/${room}`);
+            const playerRef = roomRef.child(`players/${name}`);
+
+            roomRef.child('settings').once('value', snapshot => {
+                if (!snapshot.exists()) return alert("Room does not exist!");
+                const settings = snapshot.val();
+
+                playerRef.once('value', pSnap => {
+                    if (pSnap.exists()) {
+                        setupGameUI(pSnap.val());
+                    } else {
+                        roomRef.child('settings').transaction(curr => {
+                            if (curr.currentCount >= curr.maxPlayers) return;
+                            curr.currentCount++;
+                            return curr;
+                        }, (error, committed, snap) => {
+                            if (committed) {
+                                const newSettings = snap.val();
+                                const assignedRole = ((newSettings.currentCount - 1) === settings.murdererSlot) ? "Murderer" : "Civilian";
+                                const playerData = { name: name, cash: 15000, role: assignedRole };
+                                playerRef.set(playerData);
+                                setupGameUI(playerData);
+                            } else {
+                                alert("Game Full!");
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        function setupGameUI(data) {
+            myRole = data.role;
+            myCash = data.cash;
+            document.getElementById('display-room-code').innerText = roomCode;
+            document.getElementById('display-cash-badge').innerText = `RM ${myCash}`;
+
+            const roleNameEl = document.getElementById('role-name');
+            const roleIconEl = document.getElementById('role-icon');
+            const murdererControls = document.getElementById('murderer-controls');
+
+            if (myRole === "Murderer") {
+                roleNameEl.innerText = "Murderer";
+                roleNameEl.classList.add("text-app-danger");
+                roleIconEl.innerText = "skull"; 
+                roleIconEl.classList.replace("text-black", "text-app-danger");
+                murdererControls.classList.remove('hidden');
+            } else {
+                roleNameEl.innerText = "Civilian";
+                roleIconEl.innerText = "person";
+                murdererControls.classList.add('hidden');
+            }
+            listenToGame();
+            switchView('view-game');
+        }
+
+        function listenToGame() {
+            db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', snap => {
+                myCash = snap.val();
+                document.getElementById('display-cash-badge').innerText = `RM ${myCash}`;
+            });
+            db.ref(`games/${roomCode}/log`).on('child_added', snap => {
+                const msg = snap.val();
+                const feed = document.getElementById('game-feed-list');
+                const div = document.createElement('div');
+                div.className = "flex gap-3 text-xs border-b border-white/5 pb-2";
+                div.innerHTML = `<span class="text-app-muted">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span><span>${msg}</span>`;
+                feed.prepend(div);
+            });
+        }
+
+        // ACTIONS
+        function performAction(type) {
+            if (type === 'pay') {
+                const target = prompt("Player Name:");
+                if(!target) return;
+                const amt = parseInt(prompt("Amount:"));
+                if(amt && myCash >= amt) {
+                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - amt);
+                    db.ref(`games/${roomCode}/players/${target.toUpperCase()}/cash`).transaction(c => (c||0) + amt);
+                    logEvent(`${myName} paid RM${amt} to ${target}`);
+                }
+            } else if (type === 'bank') {
+                const amt = parseInt(prompt("Amount (Negative to pay bank):"));
+                if(amt) {
+                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash + amt);
+                    logEvent(`${myName} bank transfer: RM${amt}`);
+                }
+            } else if (type === 'chest') {
+                // Randomized Logic including Power Cards
+                const roll = Math.random();
+                if (roll > 0.7) {
+                    // Get a Power Card
+                    const powerCards = ["Double Move", "Steal 1k", "Block Rent", "Jail Free"];
+                    const pCard = powerCards[Math.floor(Math.random() * powerCards.length)];
+                    alert(`⚡ You found a Power Card: ${pCard}`);
+                    db.ref(`games/${roomCode}/players/${myName}/powerCards`).push(pCard);
+                    logEvent(`${myName} found a Power Card!`);
+                } else {
+                    // Regular Cash Event
+                    const cashCards = [{msg:"Inheritance", val:3000}, {msg:"Tax Audit", val:-2000}];
+                    const card = cashCards[Math.floor(Math.random() * cashCards.length)];
+                    alert(`Chest: ${card.msg} (${card.val})`);
+                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash + card.val);
+                    logEvent(`${myName} Chest: ${card.msg}`);
+                }
+            } else if (type === 'land') {
+                const num = prompt("Land # (1-40):");
+                if(num) {
+                    db.ref(`games/${roomCode}/players/${myName}/lands`).push(`Land #${num}`);
+                    logEvent(`${myName} claimed Land #${num}`);
+                }
+            }
+        }
+
+        function triggerHint() {
+            const hint = prompt("Type your hint (e.g., 'I am not wearing red')");
+            if(hint) logEvent(`🕵️ HINT: ${hint}`);
+        }
+
+        function logEvent(msg) {
+            db.ref(`games/${roomCode}/log`).push(msg);
+        }
+    </script>
 </body>
 </html>

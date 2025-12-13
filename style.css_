@@ -1,90 +1,136 @@
 body {
-    background-color: #1a1a1a;
+    background-color: #121212;
     color: #fff;
-    font-family: 'Courier New', monospace;
+    font-family: 'Courier New', Courier, monospace;
     margin: 0;
-    padding: 20px;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
 }
 
-.hidden { display: none; }
-.blur { filter: blur(5px); user-select: none; }
+/* --- THE MOST IMPORTANT PART --- */
+.hidden {
+    display: none !important;
+}
+/* ------------------------------- */
 
-input, select {
-    padding: 10px;
+#app-container {
+    width: 100%;
+    max-width: 450px; /* Limits width to look like a phone app */
+    padding: 20px;
+}
+
+.app-view {
+    width: 100%;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Menu Styling */
+.logo { font-size: 3em; color: #d4af37; margin-bottom: 5px; letter-spacing: 5px; text-align: center; }
+.subtitle { color: #888; margin-top: 0; margin-bottom: 40px; text-align: center; }
+
+.btn-menu {
+    width: 100%;
+    padding: 20px;
     margin: 10px 0;
-    width: 80%;
+    font-size: 18px;
+    background: #1e1e1e;
+    color: #d4af37;
+    border: 2px solid #d4af37;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.btn-action {
+    width: 100%;
+    padding: 15px;
+    background: #d4af37;
+    color: #000;
+    border: none;
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 20px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.input-group { margin-bottom: 15px; text-align: left; }
+.input-group label { display: block; color: #aaa; margin-bottom: 5px; font-size: 12px; }
+input, select {
+    width: 100%;
+    padding: 12px;
     background: #333;
     border: 1px solid #555;
     color: white;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
-button {
-    background: #d4af37; /* Gold */
-    color: black;
-    border: none;
-    padding: 15px;
-    margin: 5px;
-    font-weight: bold;
+/* Game Grid */
+.grid-menu { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 20px; }
+.btn-tile { 
+    width: 48%; 
+    padding: 15px 5px; 
+    background: #222; 
+    border: 2px solid #444; 
+    color: white; 
+    cursor: pointer; 
+    border-radius: 8px;
+}
+
+/* Button Colors */
+.pay { border-color: #4caf50; }
+.bank { border-color: #f44336; }
+.chest { border-color: #2196f3; }
+.challenge { border-color: #9c27b0; }
+.land { border-color: gold; }
+
+/* Utilities */
+.stats-bar { 
+    background: #222; 
+    padding: 15px; 
+    border: 1px solid #d4af37; 
+    display: flex; 
+    justify-content: space-between; 
+    font-weight: bold; 
     cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
+    border-radius: 8px;
 }
+.money-text { color: #4caf50; }
+.blur { filter: blur(6px); }
+.hint-small { text-align: center; color: #555; font-size: 10px; margin-top: 5px; }
 
-.btn-action { width: 45%; height: 80px; vertical-align: top; }
-.btn-danger { background: #ff4444; color: white; width: 100%; }
-.btn-close { background: #555; color: white; margin-top: 10px;}
-
-.grid-menu {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    margin-top: 20px;
+/* OVERLAYS (Fixes the issue where they stuck to the bottom) */
+.overlay { 
+    position: fixed; /* Sticks to screen */
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.9); 
+    z-index: 999; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
 }
-
-.stats-bar {
-    background: #333;
-    padding: 15px;
+.modal-box, .card-box { 
+    background: #222; 
+    padding: 20px; 
+    border: 2px solid #d4af37; 
+    width: 80%; 
+    max-width: 350px; 
+    text-align: center; 
     border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 20px;
-    font-weight: bold;
-    border: 1px solid #d4af37;
 }
 
-.secret-section {
-    margin: 20px 0;
-    padding: 10px;
-    background: #220000;
-    border: 1px dashed red;
-    cursor: pointer;
-}
+.danger-zone { border: 2px dashed red; padding: 10px; margin-top: 20px; background: #2a0000; border-radius: 8px; }
+.btn-danger { background: red; color: white; border: none; padding: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+.btn-close { background: #444; color: white; border: none; padding: 10px; margin-top: 10px; width: 100%; cursor: pointer; }
+.btn-text { background: none; border: none; color: #888; text-decoration: underline; margin-top: 10px; cursor: pointer; width: 100%; }
 
-#game-log {
-    list-style: none;
-    padding: 0;
-    text-align: left;
-    max-height: 200px;
-    overflow-y: scroll;
-    background: #222;
-    border: 1px solid #444;
-}
-
-#game-log li {
-    padding: 8px;
-    border-bottom: 1px solid #333;
-    font-size: 14px;
-}
-
-.modal {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    background: #222;
-    padding: 20px;
-    border: 2px solid #d4af37;
-    z-index: 100;
-    width: 80%;
-}
+.feed-container { text-align: left; margin-top: 20px; border-top: 1px solid #444; padding-top: 10px; }
+#game-log { list-style: none; padding: 0; color: #ccc; font-size: 12px; max-height: 200px; overflow-y: auto; }
+#game-log li { padding: 5px 0; border-bottom: 1px solid #333; }
