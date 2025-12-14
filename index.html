@@ -6,7 +6,7 @@
     <title>Conquer Monopoly</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -15,9 +15,12 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        wizard: ['Cinzel', 'serif'] 
+                    },
                     colors: {
-                        app: { bg: '#101010', card: '#1C1C1E', accent: '#6366F1', danger: '#EF4444', success: '#10B981', text: '#FFFFFF', muted: '#9CA3AF' }
+                        app: { bg: '#0a0a0a', card: '#161616', accent: '#8b5cf6', danger: '#ef4444', success: '#10b981', text: '#e5e5e5', muted: '#a3a3a3' }
                     },
                     animation: {
                         'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
@@ -35,33 +38,41 @@
         body::-webkit-scrollbar { display: none; }
         .blur-secret { filter: blur(12px); user-select: none; }
         .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
+        .wizard-border { border: 1px solid #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
     </style>
 </head>
 <body class="bg-app-bg text-app-text min-h-screen font-sans antialiased pb-24 overflow-x-hidden">
 
     <audio id="snd-cash" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=success-1-6297.mp3" preload="auto"></audio>
+    <audio id="snd-alert" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=notification-sound-7062.mp3" preload="auto"></audio>
 
     <div id="global-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6 bg-black/90 backdrop-blur-md">
         <div class="bg-app-card border-2 border-app-accent w-full max-w-sm p-6 rounded-3xl shadow-2xl text-center animate-pop-in">
             <div id="alert-icon-box" class="w-20 h-20 bg-app-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span id="alert-icon" class="material-icons-round text-5xl text-app-accent">campaign</span>
             </div>
-            <h2 id="alert-title" class="text-2xl font-black uppercase italic mb-2 text-white tracking-wider">ALERT</h2>
+            <h2 id="alert-title" class="text-2xl font-black uppercase italic mb-2 text-white tracking-wider font-wizard">ALERT</h2>
             <p id="alert-msg" class="text-lg font-medium text-gray-300 mb-6 leading-relaxed">Something happened.</p>
-            <button onclick="closeGlobalAlert()" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:scale-105 transition-transform">
-                OK
-            </button>
+            <button onclick="closeGlobalAlert()" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:scale-105 transition-transform">OK</button>
         </div>
     </div>
 
     <div id="modal-player-select" class="fixed inset-0 z-[90] hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
         <div class="bg-[#18181b] w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 shadow-2xl animate-slide-up">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-white">Select Player</h3>
+                <h3 id="player-select-title" class="text-xl font-bold text-white font-wizard">Select Player</h3>
                 <button onclick="closePlayerSelect()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
             </div>
-            <div id="player-list-container" class="space-y-3 max-h-[60vh] overflow-y-auto">
-                </div>
+            <div id="player-list-container" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="modal-hint-phase" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+        <div class="bg-app-card w-full max-w-sm p-6 rounded-3xl border border-white/10 shadow-2xl text-center relative">
+            <div class="mb-4"><span class="material-icons-round text-4xl text-app-accent animate-spin-slow">security</span></div>
+            <h2 id="hint-phase-title" class="text-xl font-black text-white mb-2 uppercase font-wizard">Security Check</h2>
+            <p id="hint-phase-desc" class="text-sm text-gray-400 mb-6">Complete this task to verify connection.</p>
+            <div id="hint-content-area" class="space-y-4"></div>
         </div>
     </div>
 
@@ -69,72 +80,71 @@
 
         <div id="view-home" class="flex flex-col flex-1 justify-center items-center space-y-8 animate-fade-in">
             <div class="text-center space-y-2">
-                <div class="w-20 h-20 bg-app-card rounded-2xl mx-auto flex items-center justify-center border border-white/10 shadow-2xl mb-6">
-                    <span class="material-icons-round text-5xl text-app-accent">casino</span>
+                <div class="w-24 h-24 bg-gradient-to-br from-purple-900 to-black rounded-full mx-auto flex items-center justify-center border-2 border-purple-500/50 shadow-[0_0_30px_rgba(139,92,246,0.3)] mb-6">
+                    <span class="material-icons-round text-6xl text-purple-400">castle</span>
                 </div>
-                <h1 class="text-3xl font-bold tracking-tight">Conquer</h1>
-                <p class="text-app-muted text-sm uppercase tracking-widest font-medium">Murder Mystery Monopoly</p>
+                <h1 class="text-4xl font-bold tracking-tight font-wizard text-white">Conquer</h1>
+                <p class="text-app-muted text-xs uppercase tracking-[0.3em] font-medium text-purple-300">Murder Mystery Monopoly</p>
             </div>
             <div class="w-full space-y-3">
-                <button onclick="switchView('view-create')" class="w-full bg-app-accent hover:bg-indigo-500 py-4 rounded-xl font-bold text-lg shadow-lg">Create New Game</button>
-                <button onclick="switchView('view-join')" class="w-full bg-app-card border border-white/10 hover:bg-white/5 py-4 rounded-xl font-semibold text-lg text-app-muted hover:text-white">Join Game</button>
+                <button onclick="switchView('view-create')" class="w-full bg-app-accent hover:bg-purple-600 py-4 rounded-xl font-bold text-lg shadow-lg font-wizard tracking-wide text-black">Create New Game</button>
+                <button onclick="switchView('view-join')" class="w-full bg-app-card border border-white/10 hover:bg-white/5 py-4 rounded-xl font-semibold text-lg text-app-muted hover:text-white font-wizard">Join Game</button>
             </div>
         </div>
 
         <div id="view-create" class="hidden flex-col flex-1 pt-4">
             <div class="flex items-center justify-between mb-8">
                 <button onclick="switchView('view-home')" class="p-2 -ml-2 text-app-muted hover:text-white"><span class="material-icons-round">arrow_back_ios</span></button>
-                <h2 class="text-lg font-semibold">Game Setup</h2>
+                <h2 class="text-lg font-semibold font-wizard">Create Session</h2>
                 <div class="w-8"></div>
             </div>
             <div class="space-y-4">
                 <div class="bg-app-card rounded-2xl overflow-hidden border border-white/5 p-4 space-y-4">
-                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span class="text-sm font-medium text-app-muted">Host Name</span>
-                        <input id="create-name" type="text" placeholder="Name" class="bg-transparent text-right outline-none text-white w-1/2 uppercase font-bold">
-                    </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-app-muted">Room Code</span>
-                        <input id="create-room" type="text" placeholder="ROOM1" class="bg-transparent text-right outline-none text-app-accent w-1/2 uppercase font-bold">
+                        <input id="create-room" type="text" placeholder="ROOM1" class="bg-transparent text-right outline-none text-app-accent w-1/2 uppercase font-bold tracking-wider">
                     </div>
                 </div>
                 <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex items-center justify-between">
                     <span class="font-medium">Total Players</span>
-                    <div class="flex items-center gap-3 bg-app-input rounded-lg p-1">
-                        <button onclick="adjustCount(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded">-</button>
+                    <div class="flex items-center gap-3 bg-app-bg rounded-lg p-1 border border-white/5">
+                        <button onclick="adjustCount(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded text-purple-400">-</button>
                         <span id="player-count-display" class="font-bold w-4 text-center">4</span>
-                        <button onclick="adjustCount(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded">+</button>
+                        <button onclick="adjustCount(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded text-purple-400">+</button>
                     </div>
                 </div>
             </div>
-            <button onclick="handleCreateGame()" class="mt-auto w-full bg-app-accent py-4 rounded-xl font-bold text-lg shadow-lg">Start Session</button>
+            <button onclick="handleCreateGame()" class="mt-auto w-full bg-app-accent py-4 rounded-xl font-bold text-lg shadow-lg text-black font-wizard">Create & Join</button>
         </div>
 
         <div id="view-join" class="hidden flex-col flex-1 pt-4">
             <div class="flex items-center justify-between mb-8">
                 <button onclick="switchView('view-home')" class="p-2 -ml-2 text-app-muted hover:text-white"><span class="material-icons-round">arrow_back_ios</span></button>
-                <h2 class="text-lg font-semibold">Join Lobby</h2>
+                <h2 class="text-lg font-semibold font-wizard">Join Lobby</h2>
                 <div class="w-8"></div>
             </div>
             <div class="bg-app-card rounded-2xl overflow-hidden border border-white/5 p-4 space-y-4">
                 <div class="flex justify-between items-center border-b border-white/5 pb-2">
                     <span class="text-sm font-medium text-app-muted">Room Code</span>
-                    <input id="join-room" type="text" placeholder="ABCD" class="bg-transparent text-right outline-none text-white w-1/2 uppercase font-bold">
+                    <input id="join-room" type="text" placeholder="ABCD" class="bg-transparent text-right outline-none text-white w-1/2 uppercase font-bold tracking-wider">
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm font-medium text-app-muted">Your Name</span>
                     <input id="join-name" type="text" placeholder="Name" class="bg-transparent text-right outline-none text-white w-1/2 uppercase font-bold">
                 </div>
             </div>
-            <button onclick="handleJoinGame()" class="mt-auto w-full bg-white text-black py-4 rounded-xl font-bold text-lg shadow-lg">Enter Game</button>
+            <button onclick="handleJoinGame()" class="mt-auto w-full bg-white text-black py-4 rounded-xl font-bold text-lg shadow-lg font-wizard">Enter Game</button>
         </div>
 
         <div id="view-game" class="hidden flex-col flex-1 pt-2 relative">
             
-            <div id="eliminated-overlay" class="absolute inset-0 z-50 bg-black/80 hidden flex-col items-center justify-center backdrop-blur-sm">
-                <span class="material-icons-round text-6xl text-red-600 mb-4">sentiment_very_dissatisfied</span>
-                <h2 class="text-3xl font-black text-red-500 uppercase">Eliminated</h2>
-                <p class="text-gray-400 mt-2">You guessed wrong.</p>
+            <div id="eliminated-overlay" class="fixed inset-0 z-[200] bg-black/95 hidden flex-col items-center justify-center backdrop-blur-md text-center p-6">
+                <span class="material-icons-round text-8xl text-red-600 mb-6 animate-pulse">sentiment_very_dissatisfied</span>
+                <h2 class="text-4xl font-black text-red-500 uppercase font-wizard mb-4 tracking-widest">Eliminated</h2>
+                <p class="text-gray-400 text-xl font-wizard mb-8">You have been killed.</p>
+                <button id="btn-revive" onclick="performRevive()" class="hidden bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center gap-2">
+                    <span class="material-icons-round">favorite</span> USE PHOENIX POTION
+                </button>
             </div>
 
             <div class="flex justify-between items-center mb-6">
@@ -142,50 +152,55 @@
                     <span class="material-icons-round">arrow_back</span> <span class="text-xs font-bold uppercase">Exit</span>
                 </button>
                 <div class="flex gap-2">
-                     <div class="bg-app-input px-3 py-1 rounded-full text-xs font-medium text-app-muted border border-white/5">Room: <span id="display-room-code" class="text-white">...</span></div>
-                    <div id="display-cash-badge" class="bg-app-input px-3 py-1 rounded-full text-xs font-medium text-app-success border border-white/5">RM 0</div>
+                     <div class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30">Room: <span id="display-room-code" class="text-white">...</span></div>
+                    <div id="display-cash-badge" class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-app-success border border-green-500/30">RM 0</div>
                 </div>
             </div>
 
             <div class="text-center mb-6 relative group cursor-pointer tap-highlight-transparent" onclick="toggleRole()">
                 <div class="bg-app-card border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl active:scale-95 transition-transform">
                     <div id="secret-layer" class="transition-all duration-500 blur-secret opacity-50">
-                        <div class="w-24 h-24 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center border-4 border-app-bg">
-                            <span id="role-icon" class="material-icons-round text-6xl text-black">person</span> 
+                        <div class="w-24 h-24 bg-[#0a0a0a] rounded-2xl mx-auto mb-4 flex items-center justify-center border-2 border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                            <span id="role-icon" class="material-icons-round text-6xl text-white">person</span> 
                         </div>
-                        <h3 id="role-name" class="text-3xl font-bold text-white mb-2">Civilian</h3>
+                        <h3 id="role-name" class="text-3xl font-bold text-white mb-2 font-wizard">Muggle</h3>
                         <div class="flex justify-center gap-3 mt-4">
-                            <div class="bg-app-bg/50 px-3 py-2 rounded-lg border border-white/5">
-                                <span class="block text-xs text-app-muted mb-1">Goal</span>
-                                <span id="role-goal" class="text-sm font-bold text-white">Survive</span>
+                            <div class="bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                                <span class="block text-[10px] text-app-muted uppercase tracking-wider mb-1">Status</span>
+                                <span id="role-status" class="text-sm font-bold text-white">Alive</span>
                             </div>
                         </div>
                     </div>
                     <div id="reveal-text" class="absolute inset-0 flex items-center justify-center flex-col z-10 pointer-events-none transition-opacity duration-300">
                         <span class="material-icons-round text-4xl text-white/50 mb-2">visibility_off</span>
-                        <span class="text-sm font-bold tracking-widest uppercase text-white/50">Tap to Reveal</span>
+                        <span class="text-xs font-bold tracking-[0.2em] uppercase text-white/50 font-wizard">Tap to Reveal</span>
                     </div>
                 </div>
             </div>
 
             <button onclick="openInventory()" class="w-full mb-4 bg-app-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 active:scale-95 transition-all group">
                 <div class="flex items-center gap-3">
-                    <div class="bg-purple-500/20 p-2 rounded-lg text-purple-400"><span class="material-icons-round">business_center</span></div>
-                    <div class="text-left"><span class="block font-bold text-sm">My Inventory</span><span class="block text-xs text-app-muted">Cards & Properties</span></div>
+                    <div class="bg-purple-900/30 p-2 rounded-lg text-purple-400 border border-purple-500/20"><span class="material-icons-round">auto_stories</span></div>
+                    <div class="text-left"><span class="block font-bold text-sm text-white font-wizard">Grimoire</span><span class="block text-xs text-app-muted">Assets & Powers</span></div>
                 </div>
                 <span class="material-icons-round text-app-muted group-hover:translate-x-1 transition-transform">chevron_right</span>
             </button>
 
+            <div id="murderer-controls" class="hidden w-full flex justify-center mb-6">
+                <button onclick="openPlayerSelect(performKill, 'Select Victim')" class="w-full bg-red-900/80 hover:bg-red-800 border border-red-500 text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(239,68,68,0.4)]">
+                    <span class="material-icons-round text-2xl">skull</span> 
+                    <span class="tracking-widest">KILL PLAYER</span>
+                </button>   
+            </div>
+
             <button id="btn-accuse" onclick="performAccusation()" class="w-full mb-6 hidden bg-red-900/20 border border-red-500/30 p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-900/40 active:scale-95 transition-all">
-                <span class="material-icons-round text-red-500">gavel</span>
-                <span class="font-bold text-red-500">ACCUSE MURDERER</span>
+                <span class="material-icons-round text-red-500">gavel</span> <span class="font-bold text-red-500 font-wizard">ACCUSE WITCH</span>
             </button>
 
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="openPlayerSelectForPay()" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-app-success">payments</span><span class="text-xs font-bold">Pay Player</span>
+                <button onclick="openPlayerSelect(performPay, 'Select Player to Pay')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
+                    <span class="material-icons-round text-app-success">payments</span><span class="text-xs font-bold">Pay</span>
                 </button>
-                
                 <button onclick="performAction('bank')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
                     <span class="material-icons-round text-app-danger">account_balance</span><span class="text-xs font-bold">Bank</span>
                 </button>
@@ -193,436 +208,378 @@
                     <span class="material-icons-round text-blue-400">inventory_2</span><span class="text-xs font-bold">Chest</span>
                 </button>
                 <button onclick="performAction('power')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-amber-500">bolt</span><span class="text-xs font-bold">Power Card</span>
+                    <span class="material-icons-round text-amber-500">bolt</span><span class="text-xs font-bold">Power</span>
                 </button>
-                <button onclick="performAction('land')" class="col-span-2 bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-purple-400">flag</span><span class="text-xs font-bold">Claim Land (Steal Enabled)</span>
+                <button onclick="performAction('land')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
+                    <span class="material-icons-round text-purple-400">flag</span><span class="text-xs font-bold">Claim</span>
+                </button>
+                <button onclick="initiateHintPhase()" class="bg-app-card p-4 rounded-xl border border-red-500/30 active:bg-red-500/20 flex flex-col items-center gap-2">
+                    <span class="material-icons-round text-red-500">lightbulb</span><span class="text-xs font-bold text-red-500">Hint</span>
                 </button>
             </div>
 
             <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col">
-                <div class="flex items-center gap-2 mb-3 opacity-50"><span class="material-icons-round text-sm">history</span><span class="text-xs font-bold uppercase tracking-wide">Game Feed</span></div>
+                <div class="flex items-center gap-2 mb-3 opacity-50"><span class="material-icons-round text-sm">history</span><span class="text-xs font-bold uppercase tracking-wide">Log</span></div>
                 <div id="game-feed-list" class="space-y-3 overflow-y-auto text-xs flex-1"></div>
-            </div>
-            
-            <div id="murderer-controls" class="hidden mt-4">
-                <button onclick="triggerHint()" class="w-full border border-app-danger/30 text-app-danger bg-app-danger/10 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2">
-                    <span class="material-icons-round text-sm">psychology</span> Issue Hint
-                </button>
             </div>
         </div>
     </main>
 
-    <div id="modal-inventory" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex-col justify-end">
-        <div class="bg-[#18181b] rounded-t-3xl p-6 h-[85vh] flex flex-col border-t border-white/10 shadow-2xl animate-slide-up">
+    <div id="modal-inventory" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex-col justify-end">
+        <div class="bg-[#121212] rounded-t-3xl p-6 h-[85vh] flex flex-col border-t border-purple-500/30 shadow-[0_-10px_40px_rgba(139,92,246,0.1)] animate-slide-up">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-white">My Assets</h2>
+                <h2 class="text-2xl font-bold text-white font-wizard">Grimoire</h2>
                 <button onclick="closeInventory()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
             </div>
-            <div class="mb-6 flex-1 overflow-y-auto">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3 flex items-center gap-2">
-                    <span class="material-icons-round text-sm">bolt</span> Power Cards
-                </h3>
-                <div id="inventory-powers" class="space-y-3"></div>
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">bolt</span> Spells (Power Cards)</h3>
+                <div id="inventory-powers" class="grid grid-cols-2 gap-3 overflow-y-auto max-h-40"></div>
             </div>
             <div class="flex-1 overflow-y-auto border-t border-white/10 pt-4">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2">
-                    <span class="material-icons-round text-sm">map</span> Properties Owned
-                </h3>
-                <div id="inventory-lands" class="space-y-3"></div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">map</span> Domains (Lands)</h3>
+                <div id="inventory-lands" class="space-y-4 pb-10"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // CONFIG
-        const firebaseConfig = {
-            apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo",
-            authDomain: "conquer-ff3a6.firebaseapp.com",
-            databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "conquer-ff3a6",
-            storageBucket: "conquer-ff3a6.firebasestorage.app",
-            messagingSenderId: "172263193906",
-            appId: "1:172263193906:web:f2c43b9b02cb421e0feb2b",
-            measurementId: "G-D1GZTSP2SM"
-        };
+        const firebaseConfig = { apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo", authDomain: "conquer-ff3a6.firebaseapp.com", databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "conquer-ff3a6", storageBucket: "conquer-ff3a6.firebasestorage.app", messagingSenderId: "172263193906", appId: "1:172263193906:web:f2c43b9b02cb421e0feb2b", measurementId: "G-D1GZTSP2SM" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // STATE
-        let myName = "";
-        let roomCode = "";
-        let myRole = "Civilian";
-        let myCash = 15000;
-        let setupPlayerCount = 4;
+        let myName = "", roomCode = "", myRole = "Muggle", myCash = 15000, setupPlayerCount = 4, playerSelectCallback = null;
+        let revivalCardKey = null; 
 
-        // --- GLOBAL ALERT SYSTEM ---
-        function triggerGlobalAlert(title, message, icon="info") {
-            const alertId = Date.now();
-            db.ref(`games/${roomCode}/globalAlert`).set({
-                title: title,
-                message: message,
-                icon: icon,
-                timestamp: alertId
-            });
-        }
-
+        function triggerGlobalAlert(t, m, i="info") { db.ref(`games/${roomCode}/globalAlert`).set({ title: t, message: m, icon: i, timestamp: Date.now() }); }
         function listenForGlobalAlerts() {
-            // 1. PUBLIC Global Alerts
             db.ref(`games/${roomCode}/globalAlert`).on('value', snap => {
                 if(!snap.exists()) return;
                 const data = snap.val();
                 if (Date.now() - data.timestamp < 5000) {
+                    if(data.icon !== "payments") document.getElementById('snd-alert').play().catch(e=>{});
                     showBigBox(data.title, data.message, data.icon);
                 }
             });
-
-            // 2. PRIVATE Alerts (Receiving Money)
             db.ref(`games/${roomCode}/players/${myName}/notification`).on('value', snap => {
                 if(!snap.exists()) return;
                 const data = snap.val();
                 if (Date.now() - data.timestamp < 5000) {
-                    // PLAY SOUND EFFECT (Banking Style)
-                    const audio = document.getElementById('snd-cash');
-                    audio.currentTime = 0;
-                    audio.play().catch(e => console.log("Sound blocked"));
-                    
+                    document.getElementById('snd-cash').play().catch(e => {});
                     showBigBox("PAYMENT RECEIVED", data.message, "payments");
                 }
             });
+            listenForHintPhase();
         }
-
-        function showBigBox(title, msg, icon) {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-msg').innerText = msg;
-            document.getElementById('alert-icon').innerText = icon;
-            document.getElementById('global-alert-modal').classList.remove('hidden');
-            document.getElementById('global-alert-modal').classList.add('flex');
+        function showBigBox(t, m, i) {
+            document.getElementById('alert-title').innerText = t; document.getElementById('alert-msg').innerText = m; document.getElementById('alert-icon').innerText = i;
+            document.getElementById('global-alert-modal').classList.remove('hidden'); document.getElementById('global-alert-modal').classList.add('flex');
         }
+        function closeGlobalAlert() { document.getElementById('global-alert-modal').classList.add('hidden'); document.getElementById('global-alert-modal').classList.remove('flex'); }
 
-        function closeGlobalAlert() {
-            document.getElementById('global-alert-modal').classList.add('hidden');
-            document.getElementById('global-alert-modal').classList.remove('flex');
-        }
-
-        // --- NAVIGATION ---
-        function switchView(viewId) {
-            ['view-home', 'view-create', 'view-join', 'view-game'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-                document.getElementById(id).classList.remove('flex');
+        function switchView(id) {
+            ['view-home', 'view-create', 'view-join', 'view-game'].forEach(v => {
+                document.getElementById(v).classList.add('hidden'); document.getElementById(v).classList.remove('flex');
             });
-            document.getElementById(viewId).classList.remove('hidden');
-            document.getElementById(viewId).classList.add('flex');
+            document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex');
         }
-
         function toggleRole() {
-            const layer = document.getElementById('secret-layer');
-            const text = document.getElementById('reveal-text');
-            if (layer.classList.contains('blur-secret')) {
-                layer.classList.remove('blur-secret', 'opacity-50');
-                text.classList.add('opacity-0');
-            } else {
-                layer.classList.add('blur-secret', 'opacity-50');
-                text.classList.remove('opacity-0');
-            }
+            const l = document.getElementById('secret-layer'), t = document.getElementById('reveal-text');
+            l.classList.toggle('blur-secret'); l.classList.toggle('opacity-50');
+            t.classList.toggle('opacity-0');
         }
+        function adjustCount(n) { setupPlayerCount = Math.max(3, Math.min(8, setupPlayerCount + n)); document.getElementById('player-count-display').innerText = setupPlayerCount; }
 
-        function adjustCount(change) {
-            setupPlayerCount += change;
-            if (setupPlayerCount < 3) setupPlayerCount = 3;
-            if (setupPlayerCount > 8) setupPlayerCount = 8;
-            document.getElementById('player-count-display').innerText = setupPlayerCount;
-        }
-
-        // --- PLAYER SELECT LOGIC (NEW) ---
-        function openPlayerSelectForPay() {
-            const list = document.getElementById('player-list-container');
-            list.innerHTML = '<div class="text-center text-gray-500 py-4"><span class="material-icons-round animate-spin">refresh</span></div>';
-            
-            document.getElementById('modal-player-select').classList.remove('hidden');
-            document.getElementById('modal-player-select').classList.add('flex');
-
-            db.ref(`games/${roomCode}/players`).once('value', snap => {
-                list.innerHTML = '';
-                if(snap.exists()) {
-                    snap.forEach(child => {
-                        const pName = child.key;
-                        if(pName !== myName) {
-                            const btn = document.createElement('button');
-                            btn.className = "w-full bg-[#27272a] hover:bg-[#3f3f46] p-4 rounded-xl flex items-center justify-between transition-colors";
-                            btn.innerHTML = `
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center font-bold text-white text-lg">${pName.charAt(0)}</div>
-                                    <span class="font-bold text-white">${pName}</span>
-                                </div>
-                                <span class="material-icons-round text-app-success">chevron_right</span>
-                            `;
-                            btn.onclick = () => { selectPlayerForPay(pName); };
-                            list.appendChild(btn);
-                        }
-                    });
-                }
-            });
-        }
-
-        function closePlayerSelect() {
-            document.getElementById('modal-player-select').classList.add('hidden');
-            document.getElementById('modal-player-select').classList.remove('flex');
-        }
-
-        function selectPlayerForPay(target) {
-            closePlayerSelect();
-            setTimeout(() => {
-                const amt = parseInt(prompt(`Paying ${target}. Enter Amount:`));
-                if(amt && myCash >= amt) {
-                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - amt);
-                    db.ref(`games/${roomCode}/players/${target}/cash`).transaction(c => (c||0) + amt);
-                    
-                    // Trigger PRIVATE Notification
-                    db.ref(`games/${roomCode}/players/${target}/notification`).set({
-                        message: `You received RM ${amt} from ${myName}!`,
-                        timestamp: Date.now()
-                    });
-                    
-                    logEvent(`${myName} paid RM${amt} to ${target}`);
-                }
-            }, 300); // Slight delay for UI smoothness
-        }
-
-        // --- INVENTORY LOGIC ---
         function openInventory() {
-            document.getElementById('modal-inventory').classList.remove('hidden');
-            document.getElementById('modal-inventory').classList.add('flex');
+            document.getElementById('modal-inventory').classList.remove('hidden'); document.getElementById('modal-inventory').classList.add('flex');
             
             db.ref(`games/${roomCode}/players/${myName}/lands`).once('value', snap => {
-                const landContainer = document.getElementById('inventory-lands');
-                landContainer.innerHTML = '';
+                const c = document.getElementById('inventory-lands'); c.innerHTML = '';
                 if(snap.exists()) {
                     const lands = snap.val();
-                    Object.keys(lands).forEach(landNum => {
-                        landContainer.innerHTML += `
-                            <div class="bg-[#27272a] p-4 rounded-xl border-l-4 border-purple-500 shadow-md flex justify-between items-center mb-3">
-                                <div>
-                                    <h4 class="font-bold text-white text-lg">Land #${landNum}</h4>
-                                    <span class="text-xs text-gray-400">Property Asset</span>
-                                </div>
-                                <span class="material-icons-round text-purple-500 text-3xl">flag</span>
-                            </div>`;
+                    Object.keys(lands).forEach(k => {
+                        const colors = ['bg-amber-700', 'bg-cyan-400', 'bg-pink-500', 'bg-orange-500', 'bg-red-600', 'bg-yellow-400', 'bg-green-600', 'bg-blue-700'];
+                        const colorClass = colors[k % 8];
+                        
+                        c.innerHTML += `
+                        <div class="bg-[#1a1a1a] wizard-border rounded-lg overflow-hidden mb-4 relative group">
+                            <div class="h-8 ${colorClass} w-full border-b border-[#d4af37]"></div>
+                            <div class="p-4 text-center">
+                                <h4 class="font-wizard font-bold text-xl text-[#d4af37] mb-1">DEED OF LAND</h4>
+                                <h2 class="text-2xl font-black text-white mb-2">No. ${k}</h2>
+                                <div class="text-xs text-gray-400 uppercase tracking-widest">Property of ${myName}</div>
+                            </div>
+                        </div>`;
                     });
-                } else {
-                    landContainer.innerHTML = '<div class="text-sm text-gray-500 italic p-2">No properties owned.</div>';
-                }
+                } else c.innerHTML = '<div class="text-gray-500 text-center italic">No domains conquered yet.</div>';
             });
 
             db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
-                const cardContainer = document.getElementById('inventory-powers');
-                cardContainer.innerHTML = '';
+                const c = document.getElementById('inventory-powers'); c.innerHTML = '';
                 if(snap.exists()) {
                     const cards = snap.val();
-                    Object.keys(cards).forEach(key => {
-                        const cardName = cards[key];
-                        cardContainer.innerHTML += `
-                            <div class="bg-[#27272a] p-4 rounded-xl border-l-4 border-amber-500 shadow-md flex justify-between items-center mb-3">
-                                <div>
-                                    <h4 class="font-bold text-white text-md">${cardName}</h4>
-                                    <span class="text-xs text-amber-500/80 uppercase font-bold tracking-wider">Power Card</span>
-                                </div>
-                                <button onclick="usePowerCard('${key}', '${cardName}')" class="bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 py-2 rounded-lg text-sm shadow-lg">USE</button>
-                            </div>`;
+                    Object.keys(cards).forEach(k => {
+                        c.innerHTML += `<button onclick="usePowerCard('${k}','${cards[k]}')" class="bg-[#2a2a2a] border border-amber-500/30 p-3 rounded-xl text-center hover:bg-amber-900/20"><div class="text-amber-500 font-bold text-sm">${cards[k]}</div><div class="text-[10px] text-gray-500 uppercase mt-1">Tap to Cast</div></button>`;
                     });
-                } else {
-                    cardContainer.innerHTML = '<div class="text-sm text-gray-500 italic p-2">No power cards.</div>';
-                }
+                } else c.innerHTML = '<div class="col-span-2 text-gray-500 text-center italic">Grimoire empty.</div>';
             });
         }
-
-        function closeInventory() {
-            document.getElementById('modal-inventory').classList.add('hidden');
-            document.getElementById('modal-inventory').classList.remove('flex');
-        }
-
-        function usePowerCard(key, cardName) {
-            if(confirm(`Activate "${cardName}"?`)) {
-                db.ref(`games/${roomCode}/players/${myName}/powerCards/${key}`).remove();
-                triggerGlobalAlert("POWER CARD USED", `${myName} used ${cardName}!`, "bolt");
-                logEvent(`⚡ ${myName} used Power Card: ${cardName}`);
-                closeInventory(); 
+        function closeInventory() { document.getElementById('modal-inventory').classList.add('hidden'); document.getElementById('modal-inventory').classList.remove('flex'); }
+        function usePowerCard(k, n) {
+            if(confirm(`Cast spell "${n}"?`)) {
+                db.ref(`games/${roomCode}/players/${myName}/powerCards/${k}`).remove();
+                const isDark = ["Stop Move", "Block House"].includes(n) && myRole === "Witch";
+                triggerGlobalAlert(isDark ? "DARK CURSE" : "SPELL CAST", isDark ? `THE WITCH cast ${n}!` : `${myName} cast ${n}!`, "auto_fix_high");
+                logEvent(isDark ? `😈 THE WITCH cast ${n}` : `⚡ ${myName} cast ${n}`);
+                closeInventory();
             }
         }
 
-        // --- FIREBASE CORE ---
         function handleCreateGame() {
-            const name = document.getElementById('create-name').value.trim().toUpperCase();
-            const room = document.getElementById('create-room').value.trim().toUpperCase();
-            if (!name || !room) return alert("Fill all fields");
-            
-            const roomRef = db.ref(`games/${room}`);
-            roomRef.once('value', snapshot => {
-                if (snapshot.exists()) { alert("Room Taken"); } else {
-                    const killerSlot = Math.floor(Math.random() * setupPlayerCount);
-                    roomRef.child('settings').set({ maxPlayers: setupPlayerCount, murdererSlot: killerSlot, currentCount: 0 });
-                    joinGameProcess(name, room);
+            const r = document.getElementById('create-room').value.trim().toUpperCase();
+            if(!r) return alert("Enter Code");
+            const ref = db.ref(`games/${r}`);
+            ref.once('value', s => {
+                if(s.exists()) alert("Code Taken");
+                else {
+                    const k = Math.floor(Math.random()*setupPlayerCount);
+                    ref.child('settings').set({ maxPlayers: setupPlayerCount, murdererSlot: k, currentCount: 0 });
+                    switchView('view-join');
+                    document.getElementById('join-room').value = r;
                 }
             });
         }
-
         function handleJoinGame() {
-            const name = document.getElementById('join-name').value.trim().toUpperCase();
-            const room = document.getElementById('join-room').value.trim().toUpperCase();
-            if (!name || !room) return alert("Fill all fields");
-            joinGameProcess(name, room);
+            const n = document.getElementById('join-name').value.trim().toUpperCase();
+            const r = document.getElementById('join-room').value.trim().toUpperCase();
+            if(!n || !r) return alert("Fill all");
+            joinGameProcess(n,r);
         }
-
-        function joinGameProcess(name, room) {
-            myName = name; roomCode = room;
-            const roomRef = db.ref(`games/${room}`);
-            const playerRef = roomRef.child(`players/${name}`);
-
-            roomRef.child('settings').once('value', snapshot => {
-                if (!snapshot.exists()) return alert("Room not found");
-                const settings = snapshot.val();
-
-                playerRef.once('value', pSnap => {
-                    if (pSnap.exists()) {
-                        setupGameUI(pSnap.val());
-                    } else {
-                        roomRef.child('settings').transaction(curr => {
-                            if (curr.currentCount >= curr.maxPlayers) return;
-                            curr.currentCount++;
-                            return curr;
-                        }, (error, committed, snap) => {
-                            if (committed) {
-                                const newSettings = snap.val();
-                                const assignedRole = ((newSettings.currentCount - 1) === settings.murdererSlot) ? "Murderer" : "Civilian";
-                                const playerData = { name: name, cash: 15000, role: assignedRole };
-                                playerRef.set(playerData);
-                                setupGameUI(playerData);
-                            } else {
-                                alert("Game Full");
-                            }
+        function joinGameProcess(n,r) {
+            myName = n; roomCode = r;
+            const ref = db.ref(`games/${r}`);
+            const pRef = ref.child(`players/${n}`);
+            ref.child('settings').once('value', s => {
+                if(!s.exists()) return alert("No Room");
+                const set = s.val();
+                pRef.once('value', ps => {
+                    if(ps.exists()) setupGameUI(ps.val());
+                    else {
+                        ref.child('settings').transaction(c => {
+                            if(c.currentCount >= c.maxPlayers) return;
+                            c.currentCount++; return c;
+                        }, (e, comm, snap) => {
+                            if(comm) {
+                                const role = ((snap.val().currentCount - 1) === set.murdererSlot) ? "Witch" : "Muggle";
+                                const d = { name: n, cash: 15000, role: role, status: "Alive" };
+                                pRef.set(d); setupGameUI(d);
+                            } else alert("Full");
                         });
                     }
                 });
             });
         }
 
-        function setupGameUI(data) {
-            myRole = data.role;
-            myCash = data.cash;
+        function setupGameUI(d) {
+            myRole = d.role; myCash = d.cash;
             document.getElementById('display-room-code').innerText = roomCode;
             document.getElementById('display-cash-badge').innerText = `RM ${myCash}`;
-
-            const roleName = document.getElementById('role-name');
-            const roleIcon = document.getElementById('role-icon');
-            const mControls = document.getElementById('murderer-controls');
-            const btnAccuse = document.getElementById('btn-accuse');
-
-            if (myRole === "Murderer") {
-                roleName.innerText = "Murderer";
-                roleName.classList.add("text-app-danger");
-                roleIcon.innerText = "skull"; 
-                roleIcon.classList.replace("text-black", "text-app-danger");
-                mControls.classList.remove('hidden');
-                btnAccuse.classList.add('hidden'); // Murderer can't accuse
-            } else {
-                roleName.innerText = "Civilian";
-                roleIcon.innerText = "person";
-                mControls.classList.add('hidden');
-                btnAccuse.classList.remove('hidden');
-            }
             
-            listenToGame();
+            db.ref(`games/${roomCode}/players/${myName}/status`).on('value', s => {
+                if(s.val() === "Dead") {
+                    document.getElementById('eliminated-overlay').classList.remove('hidden');
+                    document.getElementById('eliminated-overlay').classList.add('flex');
+                    checkRevival();
+                } else {
+                    document.getElementById('eliminated-overlay').classList.add('hidden');
+                    document.getElementById('eliminated-overlay').classList.remove('flex');
+                }
+            });
+
+            const rn = document.getElementById('role-name'), ri = document.getElementById('role-icon'), m = document.getElementById('murderer-controls'), a = document.getElementById('btn-accuse');
+            if(myRole === "Witch") {
+                rn.innerText = "Witch"; rn.classList.add("text-app-danger"); ri.innerText = "history_edu"; ri.classList.replace("text-white","text-app-danger");
+                m.classList.remove('hidden'); a.classList.add('hidden');
+            } else {
+                rn.innerText = "Muggle"; ri.innerText = "person"; m.classList.add('hidden'); a.classList.remove('hidden');
+            }
             listenForGlobalAlerts();
+            db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', s => { myCash = s.val(); document.getElementById('display-cash-badge').innerText=`RM ${myCash}`; });
+            db.ref(`games/${roomCode}/log`).on('child_added', s => {
+                const d = document.createElement('div');
+                d.className = "flex gap-2 text-xs border-b border-white/5 pb-1 mb-1 text-gray-400";
+                d.innerHTML = `<span>${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span> <span class="text-white">${s.val()}</span>`;
+                document.getElementById('game-feed-list').prepend(d);
+            });
             switchView('view-game');
         }
 
-        function listenToGame() {
-            db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', snap => {
-                myCash = snap.val();
-                document.getElementById('display-cash-badge').innerText = `RM ${myCash}`;
-            });
-            db.ref(`games/${roomCode}/log`).on('child_added', snap => {
-                const msg = snap.val();
-                const feed = document.getElementById('game-feed-list');
-                const div = document.createElement('div');
-                div.className = "flex gap-3 text-xs border-b border-white/5 pb-2";
-                div.innerHTML = `<span class="text-app-muted">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span><span>${msg}</span>`;
-                feed.prepend(div);
+        function checkRevival() {
+            db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
+                const btn = document.getElementById('btn-revive');
+                revivalCardKey = null;
+                if(snap.exists()) {
+                    snap.forEach(c => {
+                        if(c.val() === "Phoenix Potion") revivalCardKey = c.key;
+                    });
+                }
+                if(revivalCardKey) btn.classList.remove('hidden');
+                else btn.classList.add('hidden');
             });
         }
 
-        // --- ACTIONS ---
-        function performAction(type) {
-            if (type === 'land') {
-                const num = prompt("Land # (1-40):");
-                if (!num) return;
-
-                const ownershipRef = db.ref(`games/${roomCode}/ownership/${num}`);
-                ownershipRef.once('value', snap => {
-                    if (snap.exists()) {
-                        const oldOwner = snap.val();
-                        if (oldOwner === myName) { alert("Already yours"); return; }
-                        db.ref(`games/${roomCode}/players/${oldOwner}/lands/${num}`).remove();
-                        db.ref(`games/${roomCode}/players/${myName}/lands/${num}`).set(true);
-                        ownershipRef.set(myName);
-                        triggerGlobalAlert("LAND STOLEN!", `${myName} stole Land #${num} from ${oldOwner}!`, "flag");
-                        logEvent(`⚔️ ${myName} stole Land #${num} from ${oldOwner}`);
-                    } else {
-                        ownershipRef.set(myName);
-                        db.ref(`games/${roomCode}/players/${myName}/lands/${num}`).set(true);
-                        logEvent(`${myName} claimed Land #${num}`);
-                    }
-                });
-
-            } else if (type === 'bank') {
-                const amt = parseInt(prompt("Amount (Negative to pay bank):"));
-                if(amt) {
-                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash + amt);
-                    logEvent(`${myName} bank: RM${amt}`);
-                }
-            } else if (type === 'chest') {
-                const cards = [{m:"Inheritance",v:3000}, {m:"Tax Audit",v:-2000}, {m:"Re-Zoning",v:0}];
-                const c = cards[Math.floor(Math.random()*cards.length)];
-                alert(`Chest: ${c.m}`);
-                if(c.v !== 0) db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash + c.v);
-                logEvent(`${myName} Chest: ${c.m}`);
-            } else if (type === 'power') {
-                const powers = ["Double Move", "Steal 1k", "Block Rent"];
-                const p = powers[Math.floor(Math.random()*powers.length)];
-                alert(`Power Card: ${p}`);
-                db.ref(`games/${roomCode}/players/${myName}/powerCards`).push(p);
-                logEvent(`${myName} drew Power Card`);
+        function performRevive() {
+            if(revivalCardKey) {
+                db.ref(`games/${roomCode}/players/${myName}/powerCards/${revivalCardKey}`).remove();
+                db.ref(`games/${roomCode}/players/${myName}/status`).set("Alive");
+                triggerGlobalAlert("RESURRECTION", `${myName} used a PHOENIX POTION to return to life!`, "favorite");
+                logEvent(`💖 ${myName} revived!`);
             }
         }
 
-        // ACCUSATION
-        function performAccusation() {
-            let guess = prompt("WHO IS THE MURDERER? (Enter Name)");
-            if (!guess) return;
-            guess = guess.trim().toUpperCase();
+        function performAction(t) {
+            if(t === 'land') {
+                const n = prompt("Land #:"); if(!n) return;
+                const ref = db.ref(`games/${roomCode}/ownership/${n}`);
+                ref.once('value', s => {
+                    if(s.exists()) {
+                        const old = s.val();
+                        if(old === myName) return alert("Owned");
+                        db.ref(`games/${roomCode}/players/${old}/lands/${n}`).remove();
+                        db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
+                        ref.set(myName);
+                        triggerGlobalAlert("DOMAIN SEIZED", `${myName} conquered Land #${n} from ${old}!`, "flag");
+                        logEvent(`⚔️ ${myName} seized Land #${n} from ${old}`);
+                    } else {
+                        ref.set(myName);
+                        db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
+                        triggerGlobalAlert("NEW DOMAIN", `${myName} claimed Land #${n}!`, "flag");
+                        logEvent(`${myName} claimed Land #${n}`);
+                    }
+                });
+            } else if(t === 'bank') {
+                const a = parseInt(prompt("Amount (- to pay):"));
+                if(a) { db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash+a); logEvent(`${myName} bank: ${a}`); }
+            } else if(t === 'chest') {
+                const c = [{m:"Inheritance",v:3000},{m:"Tax",v:-2000},{m:"Re-Zone",v:0}];
+                const pick = c[Math.floor(Math.random()*c.length)];
+                alert(pick.m); if(pick.v) db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash+pick.v);
+                if(Math.random()>0.7) initiateHintPhase();
+                logEvent(`${myName} Chest: ${pick.m}`);
+            } else if(t === 'power') {
+                let p = ["Double Move","Steal 1k","Block Rent","Phoenix Potion"];
+                if(myRole==="Witch") p = [...p,"Stop Move","Block House"];
+                const pick = p[Math.floor(Math.random()*p.length)];
+                alert(`Spell: ${pick}`); db.ref(`games/${roomCode}/players/${myName}/powerCards`).push(pick);
+            }
+        }
 
-            db.ref(`games/${roomCode}/players/${guess}/role`).once('value', snap => {
-                const role = snap.val(); 
-                if (role === "Murderer") {
-                    triggerGlobalAlert("GAME OVER", `VILLAGERS WIN! ${myName} caught the Murderer (${guess})!`, "emoji_events");
-                    logEvent(`🏆 ${myName} caught the Murderer (${guess})!`);
-                } else {
-                    document.getElementById('eliminated-overlay').classList.remove('hidden');
-                    document.getElementById('eliminated-overlay').classList.add('flex');
-                    logEvent(`💀 ${myName} accused ${guess} wrongly and died!`);
-                    db.ref(`games/${roomCode}/players/${myName}/role`).set("Dead");
+        function openPlayerSelect(cb, t="Select") {
+            playerSelectCallback = cb; document.getElementById('player-select-title').innerText = t;
+            const l = document.getElementById('player-list-container'); l.innerHTML = 'Loading...';
+            document.getElementById('modal-player-select').classList.remove('hidden'); document.getElementById('modal-player-select').classList.add('flex');
+            db.ref(`games/${roomCode}/players`).once('value', s => {
+                l.innerHTML = '';
+                s.forEach(c => {
+                    if(c.key !== myName && c.val().status !== "Dead") {
+                        const b = document.createElement('button');
+                        b.className = "w-full bg-[#27272a] p-4 rounded-xl flex justify-between items-center mb-2 hover:bg-white/5";
+                        b.innerHTML = `<span class="font-bold text-white">${c.key}</span><span class="material-icons-round text-purple-500">chevron_right</span>`;
+                        b.onclick = () => { closePlayerSelect(); if(playerSelectCallback) playerSelectCallback(c.key); };
+                        l.appendChild(b);
+                    }
+                });
+            });
+        }
+        function closePlayerSelect() { document.getElementById('modal-player-select').classList.add('hidden'); document.getElementById('modal-player-select').classList.remove('flex'); }
+        function performPay(t) {
+            const a = parseInt(prompt(`Pay ${t} amount:`));
+            if(a && myCash >= a) {
+                db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash-a);
+                db.ref(`games/${roomCode}/players/${t}/cash`).transaction(c => (c||0)+a);
+                db.ref(`games/${roomCode}/players/${t}/notification`).set({ message: `Received RM ${a} from ${myName}`, timestamp: Date.now() });
+                logEvent(`${myName} paid ${a} to ${t}`);
+            }
+        }
+        function performKill(t) {
+            if(confirm(`Kill ${t}?`)) {
+                db.ref(`games/${roomCode}/players/${t}/status`).set("Dead");
+                triggerGlobalAlert("EXECUTION", `PLAYER ${t} WAS ELIMINATED!`, "skull");
+                logEvent(`💀 ${t} was killed.`);
+                checkWinCondition();
+            }
+        }
+        function performAccusation() {
+            const g = prompt("Who is the Witch?").toUpperCase();
+            db.ref(`games/${roomCode}/players/${g}/role`).once('value', s => {
+                if(s.val() === "Witch") triggerGlobalAlert("VICTORY", `MUGGLES WIN! ${myName} caught ${g}!`, "emoji_events");
+                else { 
+                    db.ref(`games/${roomCode}/players/${myName}/status`).set("Dead"); 
+                    checkWinCondition();
                 }
             });
         }
 
-        function triggerHint() {
-            const hint = prompt("Hint:");
-            if(hint) logEvent(`🕵️ HINT: ${hint}`);
+        // NEW FUNCTION: CHECK FOR WITCH WIN
+        function checkWinCondition() {
+            db.ref(`games/${roomCode}/players`).once('value', snap => {
+                let aliveCount = 0;
+                snap.forEach(p => {
+                    if (p.val().status !== "Dead") aliveCount++;
+                });
+                if (aliveCount <= 1) {
+                    triggerGlobalAlert("GAME OVER", "THE WITCH HAS ELIMINATED EVERYONE! EVIL WINS!", "skull");
+                    logEvent("🏆 THE WITCH WINS!");
+                }
+            });
         }
 
-        function logEvent(msg) {
-            db.ref(`games/${roomCode}/log`).push(msg);
+        function initiateHintPhase() { db.ref(`games/${roomCode}/hintPhase`).set({ active: true, timestamp: Date.now() }); }
+        function listenForHintPhase() {
+            db.ref(`games/${roomCode}/hintPhase`).on('value', snap => {
+                if(!snap.exists()) return;
+                const data = snap.val();
+                if (data.active && (Date.now() - data.timestamp < 5000)) showHintModal();
+                else if (!data.active) document.getElementById('modal-hint-phase').classList.add('hidden');
+            });
         }
+        function showHintModal() {
+            const modal = document.getElementById('modal-hint-phase');
+            const container = document.getElementById('hint-content-area');
+            const title = document.getElementById('hint-phase-title');
+            const desc = document.getElementById('hint-phase-desc');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            container.innerHTML = '';
+
+            if (myRole === "Witch") {
+                title.innerText = "ISSUE A HINT"; title.classList.add("text-app-danger"); desc.innerText = "Select a question to answer about yourself.";
+                const questions = ["Are you holding a Power Card?", "Do you own a Red Property?", "Is your cash total Odd or Even?"];
+                questions.forEach(q => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full bg-[#27272a] hover:bg-[#3f3f46] p-4 rounded-xl text-left border border-white/10 text-sm font-bold text-white mb-2";
+                    btn.innerText = q; btn.onclick = () => showMurdererInput(q);
+                    container.appendChild(btn);
+                });
+            } else {
+                title.innerText = "SECURITY CHECK"; title.classList.remove("text-app-danger"); desc.innerText = "Solve this to verify connection.";
+                const distractions = ["What is 8 + 5?", "Type 'MONEY' backwards", "What comes after Friday?"];
+                const task = distractions[Math.floor(Math.random() * distractions.length)];
+                container.innerHTML = `<p class="text-xl font-bold text-white mb-4">${task}</p><input id="distraction-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-center outline-none mb-4"><button onclick="submitDistraction()" class="w-full bg-white text-black font-bold py-3 rounded-xl">VERIFY</button>`;
+            }
+        }
+        function showMurdererInput(q) {
+            const container = document.getElementById('hint-content-area');
+            container.innerHTML = `<p class="text-sm font-bold text-app-danger mb-2">${q}</p><input id="murderer-answer" type="text" class="w-full bg-black/50 border border-app-danger rounded-xl p-3 text-white text-center outline-none mb-4" placeholder="Answer"><button onclick="submitMurdererHint('${q}')" class="w-full bg-app-danger text-white font-bold py-3 rounded-xl">BROADCAST</button>`;
+        }
+        function submitMurdererHint(q) {
+            const ans = document.getElementById('murderer-answer').value;
+            if(!ans) return;
+            logEvent(`🕵️ HINT: ${q} -> ${ans.toUpperCase()}`);
+            db.ref(`games/${roomCode}/hintPhase`).set({ active: false });
+        }
+        function submitDistraction() {
+            document.getElementById('hint-content-area').innerHTML = `<div class="py-8 flex flex-col items-center"><span class="material-icons-round text-4xl text-green-500 animate-bounce">check_circle</span><h3 class="text-lg font-bold text-white mt-4">VERIFIED</h3></div>`;
+        }
+        function logEvent(m) { db.ref(`games/${roomCode}/log`).push(m); }
         function confirmExit() { if(confirm("Exit?")) switchView('view-home'); }
     </script>
 </body>
