@@ -312,7 +312,8 @@
             { en: "Magic Show: You perform street magic. Every player gives you RM 200.", bm: "Pertunjukan Silap Mata: Anda buat persembahan. Setiap pemain beri RM 200.", type: "money", val: 200 },
             { en: "Sudden Storm: All players must move Back 2 Spaces. But nothing will happen.", bm: "Ribut Tiba-tiba: Semua pemain mesti undur 2 Tapak. Tetapi tiada apa berlaku.", type: "info" },
             { en: "Open Portal: Advance to any place with the theme of forest", bm: "Buka Portal: Maju ke mana-mana tempat tema hutan", type: "info" },
-            { en: "Renovation: Pay RM 500 per House you own.", bm: "Ubah Suai: Bayar RM 500 setiap Rumah anda.", type: "houseTax", val: 500 }
+            { en: "Renovation: Pay RM 500 per House you own.", bm: "Ubah Suai: Bayar RM 500 setiap Rumah anda.", type: "houseTax", val: 500 },
+            { en: "Get Hint: You may ask for a hint.", bm: "Dapatkan Petunjuk: Anda boleh minta satu petunjuk.", type: "info" }
         ];
 
         const POWER_CARDS = [
@@ -356,13 +357,10 @@
             { en: "Word Chain: Pick a category (e.g., \"Animals\"). Go back and forth naming them. First to repeat or hesitate loses.", bm: "Rantai Kata: Pilih kategori. Jangan ragu-ragu." },
             { en: "Odd/Even: Both hide one hand behind back, holding 1 or 2 fingers. On \"Go\", reveal. If sum is Odd, Player A wins. Even, Player B wins.", bm: "Ganjil/Genap: Permainan tambah jari." },
             { en: "Last Letter: Pick A category, say a word (e.g., \"Dog\"). Opponent must say a word starting with the last letter (\"Giraffe\"). First to fail loses.", bm: "Huruf Akhir: Perkataan bermula dengan huruf akhir lawan." },
-            { en: "Scavenger: Find a red object in the room within 10 seconds.", bm: "Pencari: Cari objek MERAH dalam 10s" },
-            { en: "Scavenger: Find a blue object in the room within 10 seconds.", bm: "Pencari: Cari objek BIRU dalam 10s" },
-            { en: "Scavenger: Find a yellow object in the room within 10 seconds.", bm: "Pencari: Cari objek KUNING dalam 10s" },
-            { en: "Scavenger: Find a green object in the room within 10 seconds.", bm: "Pencari: Cari objek HIJAU dalam 10s" },
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 21 without going over.", bm: "Blackjack: Baling dadu paling dekat 21." },
-            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah Genap=A, Ganjil=B." }
+            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah Genap=A, Ganjil=B." },
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
         ];
 
         const COMPETES = [
@@ -374,12 +372,9 @@
             { en: "Odd/Even: Both hide one hand behind back, holding 1 or 2 fingers. On \"Go\", reveal. If sum is Odd, Player A wins. Even, Player B wins.", bm: "Ganjil/Genap: Permainan tambah jari." },
             { en: "Last Letter: Pick A category, say a word (e.g., \"Dog\"). Opponent must say a word starting with the last letter (\"Giraffe\"). First to fail loses.", bm: "Huruf Akhir: Mula dengan huruf akhir perkataan lawan." },
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
-            { en: "Scavenger: Find a red object in the room, first to name it win.", bm: "Pencari: Cari objek MERAH, namakan dulu menang." },
-            { en: "Scavenger: Find a blue object in the room , first to name it win.", bm: "Pencari: Cari objek BIRU, namakan dulu menang." },
-            { en: "Scavenger: Find a yellow object in the room , first to name it win.", bm: "Pencari: Cari objek KUNING, namakan dulu menang." },
-            { en: "Scavenger: Find a green object in the room , first to name it win.", bm: "Pencari: Cari objek HIJAU, namakan dulu menang." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 15 without going over.", bm: "Blackjack: Paling dekat 15 tanpa lebih." },
-            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah jari. Genap=A, Ganjil=B." }
+            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah jari. Genap=A, Ganjil=B." },
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
         ];
 
         const HINT_QUESTIONS = [
@@ -644,14 +639,15 @@
                             if(old === myName) return alert("You already own this!");
                             db.ref(`games/${roomCode}/players/${old}/lands/${n}`).remove();
                             db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price);
+                            // Deduct cash from new owner
+                            // db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price); // Removed manual deduction
                             ref.set(myName);
                             triggerGlobalAlert("DOMAIN SEIZED", `${myName} conquered ${land.name} from ${old}!`, "flag");
                             logEvent(`⚔️ ${myName} seized ${land.name} (Value: RM ${land.price})`);
                         } else {
                             ref.set(myName);
                             db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price);
+                            // db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price); // Removed manual deduction
                             triggerGlobalAlert("NEW DOMAIN", `${myName} claimed ${land.name}!`, "flag");
                             logEvent(`${myName} claimed ${land.name} (Value: RM ${land.price})`);
                         }
@@ -729,12 +725,20 @@
                 checkWinCondition();
             }
         }
+        
         function performAccusation() {
-            const g = prompt("Who is the Witch?").toUpperCase();
-            db.ref(`games/${roomCode}/players/${g}/role`).once('value', s => {
-                if(s.val() === "Witch") triggerGlobalAlert("VICTORY", `MUGGLES WIN! ${myName} caught ${g}!`, "emoji_events");
-                else { 
-                    db.ref(`games/${roomCode}/players/${myName}/status`).set("Dead"); 
+            openPlayerSelect(finalizeAccusation, "Accuse Witch");
+        }
+
+        function finalizeAccusation(suspect) {
+            if(!confirm(`Accuse ${suspect} of being the Witch?`)) return;
+
+            db.ref(`games/${roomCode}/players/${suspect}/role`).once('value', s => {
+                if(s.val() === "Witch") {
+                    triggerGlobalAlert("VICTORY", `MUGGLES WIN! ${myName} caught ${suspect}!`, "emoji_events");
+                } else {
+                    triggerGlobalAlert("WRONG ACCUSATION", `${myName} guessed wrong and died!`, "skull");
+                    db.ref(`games/${roomCode}/players/${myName}/status`).set("Dead");
                     checkWinCondition();
                 }
             });
