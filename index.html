@@ -36,7 +36,7 @@
     </script>
     <style>
         body::-webkit-scrollbar { display: none; }
-        .blur-secret { filter: blur(12px); user-select: none; }
+        .blur-secret { filter: blur(12px); opacity: 0; user-select: none; }
         .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
         .wizard-border { border: 1px solid #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
     </style>
@@ -57,7 +57,7 @@
         </div>
     </div>
 
-    <div id="modal-player-select" class="fixed inset-0 z-[90] hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
+    <div id="modal-player-select" class="fixed inset-0 z-[130] hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
         <div class="bg-[#18181b] w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 shadow-2xl animate-slide-up">
             <div class="flex justify-between items-center mb-6">
                 <h3 id="player-select-title" class="text-xl font-bold text-white font-wizard">Select Player</h3>
@@ -152,14 +152,18 @@
                     <span class="material-icons-round">arrow_back</span> <span class="text-xs font-bold uppercase">Exit</span>
                 </button>
                 <div class="flex gap-2">
-                     <div class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30">Room: <span id="display-room-code" class="text-white">...</span></div>
+                     <div class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30">
+                         Room: <span id="display-room-code" class="text-white">...</span> 
+                         <span class="mx-1 text-white/20">|</span>
+                         <button onclick="incrementRound()" class="text-app-accent hover:text-white transition-colors">Round: <span id="display-round-count" class="text-white font-bold">1</span></button>
+                     </div>
                     <div id="display-cash-badge" class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-app-success border border-green-500/30">RM 0</div>
                 </div>
             </div>
 
             <div class="text-center mb-6 relative group cursor-pointer tap-highlight-transparent" onclick="toggleRole()">
                 <div class="bg-app-card border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl active:scale-95 transition-transform">
-                    <div id="secret-layer" class="transition-all duration-500 blur-secret opacity-50">
+                    <div id="secret-layer" class="transition-all duration-500 blur-secret">
                         <div class="w-24 h-24 bg-[#0a0a0a] rounded-2xl mx-auto mb-4 flex items-center justify-center border-2 border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
                             <span id="role-icon" class="material-icons-round text-6xl text-white">person</span> 
                         </div>
@@ -184,17 +188,6 @@
                     <div class="text-left"><span class="block font-bold text-sm text-white font-wizard">Grimoire</span><span class="block text-xs text-app-muted">Assets & Powers</span></div>
                 </div>
                 <span class="material-icons-round text-app-muted group-hover:translate-x-1 transition-transform">chevron_right</span>
-            </button>
-
-            <div id="murderer-controls" class="hidden w-full flex justify-center mb-6">
-                <button onclick="openPlayerSelect(performKill, 'Select Victim')" class="relative w-full bg-red-900/80 hover:bg-red-800 border border-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.4)]">
-                    <span class="material-icons-round text-2xl absolute left-6 top-1/2 transform -translate-y-1/2">skull</span> 
-                    <span class="tracking-widest uppercase">KILL PLAYER</span>
-                </button>
-            </div>
-
-            <button id="btn-accuse" onclick="performAccusation()" class="w-full mb-6 hidden bg-red-900/20 border border-red-500/30 p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-900/40 active:scale-95 transition-all">
-                <span class="material-icons-round text-red-500">gavel</span> <span class="font-bold text-red-500 font-wizard">ACCUSE WITCH</span>
             </button>
 
             <div class="grid grid-cols-2 gap-3 mb-6">
@@ -232,19 +225,30 @@
         </div>
     </main>
 
-    <div id="modal-inventory" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 hidden flex-col justify-end">
+    <div id="modal-inventory" class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm hidden flex-col justify-end">
         <div class="bg-[#121212] rounded-t-3xl p-6 h-[85vh] flex flex-col border-t border-purple-500/30 shadow-[0_-10px_40px_rgba(139,92,246,0.1)] animate-slide-up">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold text-white font-wizard">Grimoire</h2>
                 <button onclick="closeInventory()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
             </div>
+            
             <div class="mb-6">
                 <h3 class="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">bolt</span> Spells (Power Cards)</h3>
                 <div id="inventory-powers" class="grid grid-cols-2 gap-3 overflow-y-auto max-h-40"></div>
             </div>
-            <div class="flex-1 overflow-y-auto border-t border-white/10 pt-4">
+            
+            <div class="flex-1 overflow-y-auto border-t border-white/10 pt-4 mb-4">
                 <h3 class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">map</span> Domains (Lands)</h3>
                 <div id="inventory-lands" class="space-y-4 pb-10"></div>
+            </div>
+
+            <div id="inventory-action-area" class="mt-auto pt-4 border-t border-white/10">
+                <button id="btn-kill-inventory" onclick="openPlayerSelect(performKill, 'Select Victim')" class="w-full bg-red-900/80 hover:bg-red-800 border border-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.4)] hidden flex items-center justify-center gap-3">
+                    <span class="material-icons-round">skull</span> KILL PLAYER
+                </button>
+                <button id="btn-accuse-inventory" onclick="performAccusation()" class="w-full bg-red-900/20 border border-red-500/30 p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-900/40 hidden">
+                    <span class="material-icons-round text-red-500">gavel</span> <span class="font-bold text-red-500 font-wizard">ACCUSE WITCH</span>
+                </button>
             </div>
         </div>
     </div>
@@ -256,6 +260,8 @@
 
         let myName = "", roomCode = "", myRole = "Muggle", myCash = 15000, setupPlayerCount = 4, playerSelectCallback = null;
         let revivalCardKey = null; 
+        let currentRound = 1;
+        const KILL_ROUNDS = [10, 16, 21, 25];
 
         // --- LAND DATA (CLOCKWISE STARTING FROM ANCIENT STONE) ---
         const LAND_DATA = [
@@ -349,7 +355,7 @@
             { en: "Flip a Coin - Heads Win", bm: "Lambung Syiling - Kepala Menang" },
             { en: "Dice Duel (Highest Roll Wins)", bm: "Duel Dadu (Nombor Tertinggi Menang)" },
             { en: "Coin Flip Duel", bm: "Duel Lambung Syiling" },
-            { en: "Alphabet Backwards: Recite the alphabet from Z to T without pausing more than 5 seconds", bm: "Abjad Terbalik: Sebut abjad dari Z ke T tanpa henti lebih 5 saat" },
+            { en: "Alphabet Backwards: Recite the alphabet from J to A without pausing more than 5 seconds", bm: "Abjad Terbalik: Sebut abjad dari J ke A tanpa henti lebih 5 saat" },
             { en: "Prediction: Guess if your next roll is Odd or Even", bm: "Ramalan: Teka balingan seterusnya Ganjil atau Genap" },
             { en: "Name 10: Name 10 fruits in 15 seconds.", bm: "Nama 10: Namakan 10 buah dalam 15 saat." },
             { en: "Coin Flip Duel: Both flip a coin. Matching = Challenger wins. Different = Defender wins.", bm: "Duel Syiling: Kedua lambung. Sama = Pencabar Menang. Beza = Pertahan Menang." },
@@ -360,7 +366,9 @@
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 21 without going over.", bm: "Blackjack: Baling dadu paling dekat 21." },
             { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah Genap=A, Ganjil=B." },
-            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." },
+            { en: "3 Finger Rule: player need to show 1-3 finger, if it's the same, lose."}
+
         ];
 
         const COMPETES = [
@@ -374,7 +382,9 @@
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 15 without going over.", bm: "Blackjack: Paling dekat 15 tanpa lebih." },
             { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah jari. Genap=A, Ganjil=B." },
-            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." },
+            { en: "3 Finger Rule: player need to show 1-3 finger, if it's the same, lose."}
+
         ];
 
         const HINT_QUESTIONS = [
@@ -436,6 +446,13 @@
                 }
             });
             listenForHintPhase();
+            
+            // Round Count Listener
+            db.ref(`games/${roomCode}/round`).on('value', s => {
+                currentRound = s.val() || 1;
+                document.getElementById('display-round-count').innerText = currentRound;
+                if(myRole === "Witch") updateKillButtonVisibility();
+            });
         }
         function showBigBox(t, m, i) {
             document.getElementById('alert-title').innerText = t; 
@@ -453,14 +470,34 @@
         }
         function toggleRole() {
             const l = document.getElementById('secret-layer'), t = document.getElementById('reveal-text');
-            l.classList.toggle('blur-secret'); l.classList.toggle('opacity-50');
+            l.classList.toggle('blur-secret'); 
             t.classList.toggle('opacity-0');
         }
         function adjustCount(n) { setupPlayerCount = Math.max(3, Math.min(8, setupPlayerCount + n)); document.getElementById('player-count-display').innerText = setupPlayerCount; }
 
+        function updateKillButtonVisibility() {
+            const btn = document.getElementById('btn-kill-inventory');
+            if (myRole === "Witch" && KILL_ROUNDS.includes(currentRound)) {
+                btn.classList.remove('hidden');
+                btn.classList.add('flex');
+            } else {
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+            }
+        }
+
         function openInventory() {
-            document.getElementById('modal-inventory').classList.remove('hidden'); document.getElementById('modal-inventory').classList.add('flex');
+            document.getElementById('modal-inventory').classList.remove('hidden'); 
+            document.getElementById('modal-inventory').classList.add('flex');
             
+            if(myRole === "Witch") {
+                updateKillButtonVisibility();
+                document.getElementById('btn-accuse-inventory').classList.add('hidden');
+            } else {
+                document.getElementById('btn-kill-inventory').classList.add('hidden');
+                document.getElementById('btn-accuse-inventory').classList.remove('hidden');
+            }
+
             db.ref(`games/${roomCode}/players/${myName}/lands`).once('value', snap => {
                 const c = document.getElementById('inventory-lands'); c.innerHTML = '';
                 if(snap.exists()) {
@@ -509,12 +546,11 @@
             cardRef.once('value', snap => {
                 if (!snap.exists()) return alert("Card no longer exists!");
                 const cardData = snap.val();
-                const n = cardData.en || cardData; // Get English text as the identifier
+                const n = cardData.en || cardData; 
                 
                 if(confirm(`Cast spell "${n}"?`)) {
                     cardRef.remove();
                     
-                    // Logic to detect Dark Spells (fixed for new long text format)
                     const isDark = (n.includes("Stop Move") || n.includes("Block House")) && myRole === "Witch";
                     
                     triggerGlobalAlert(isDark ? "DARK CURSE" : "SPELL CAST", isDark ? `THE WITCH cast a Dark Spell!` : `${myName} cast ${n}!`, "auto_fix_high");
@@ -585,12 +621,11 @@
                 }
             });
 
-            const rn = document.getElementById('role-name'), ri = document.getElementById('role-icon'), m = document.getElementById('murderer-controls'), a = document.getElementById('btn-accuse');
+            const rn = document.getElementById('role-name'), ri = document.getElementById('role-icon'); 
             if(myRole === "Witch") {
                 rn.innerText = "Witch"; rn.classList.add("text-app-danger"); ri.innerText = "history_edu"; ri.classList.replace("text-white","text-app-danger");
-                m.classList.remove('hidden'); a.classList.add('hidden');
             } else {
-                rn.innerText = "Muggle"; ri.innerText = "person"; m.classList.add('hidden'); a.classList.remove('hidden');
+                rn.innerText = "Muggle"; ri.innerText = "person"; 
             }
             listenForGlobalAlerts();
             db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', s => { myCash = s.val(); document.getElementById('display-cash-badge').innerText=`RM ${myCash}`; });
@@ -636,8 +671,6 @@
                 if(!land) return alert("Land not found!");
 
                 if(confirm(`Claim ${land.name}?\n\nPrice: RM ${land.price}\nRent: RM ${land.rent}\n1 House Rent: RM ${land.house}`)) {
-                    if (myCash < land.price) return alert("Not enough money!");
-                    
                     const ref = db.ref(`games/${roomCode}/ownership/${n}`);
                     ref.once('value', s => {
                         if(s.exists()) {
@@ -645,15 +678,12 @@
                             if(old === myName) return alert("You already own this!");
                             db.ref(`games/${roomCode}/players/${old}/lands/${n}`).remove();
                             db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            // Deduct cash from new owner
-                            // db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price); // Removed manual deduction
                             ref.set(myName);
                             triggerGlobalAlert("DOMAIN SEIZED", `${myName} conquered ${land.name} from ${old}!`, "flag");
                             logEvent(`⚔️ ${myName} seized ${land.name} (Value: RM ${land.price})`);
                         } else {
                             ref.set(myName);
                             db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            // db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price); // Removed manual deduction
                             triggerGlobalAlert("NEW DOMAIN", `${myName} claimed ${land.name}!`, "flag");
                             logEvent(`${myName} claimed ${land.name} (Value: RM ${land.price})`);
                         }
@@ -764,14 +794,15 @@
         }
 
         function initiateHintPhase() { db.ref(`games/${roomCode}/hintPhase`).set({ active: true, timestamp: Date.now() }); }
+        
         function listenForHintPhase() {
             db.ref(`games/${roomCode}/hintPhase`).on('value', snap => {
                 if(!snap.exists()) return;
                 const data = snap.val();
-                if (data.active && (Date.now() - data.timestamp < 5000)) showHintModal();
-                else if (!data.active) document.getElementById('modal-hint-phase').classList.add('hidden');
+                if (data.active && (Date.now() - data.timestamp < 10000)) showHintModal();
             });
         }
+
         function showHintModal() {
             const modal = document.getElementById('modal-hint-phase');
             const container = document.getElementById('hint-content-area');
@@ -783,6 +814,13 @@
             if (myRole === "Witch") {
                 title.innerText = "ISSUE A HINT"; title.classList.add("text-app-danger"); desc.innerText = "Select a question to answer about yourself.";
                 
+                // Add Open Grimoire Button
+                const invBtn = document.createElement('button');
+                invBtn.className = "w-full mb-4 bg-app-accent/20 border border-app-accent text-app-accent font-bold py-2 rounded-xl flex items-center justify-center gap-2";
+                invBtn.innerHTML = `<span class="material-icons-round">auto_stories</span> Open Grimoire`;
+                invBtn.onclick = () => openInventory();
+                container.appendChild(invBtn);
+
                 const indices = Array.from(Array(HINT_QUESTIONS.length).keys());
                 const shuffled = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
 
@@ -797,26 +835,66 @@
                 });
             } else {
                 title.innerText = "SECURITY CHECK"; title.classList.remove("text-app-danger"); desc.innerText = "Solve this to verify connection.";
-                const distractions = ["What is 8 + 5?", "Type 'MONEY' backwards", "What comes after Friday?"];
+                
+                const distractions = [
+                    "What is 8 + 5?", "Type 'MONEY' backwards", "What comes after Friday?", 
+                    "What is 10 x 2?", "Type 'WIZARD'", "What is 5 - 2?",
+                    "Type 'CASTLE' backwards", "Is fire hot? (Yes/No)", "Type 'GOLD'",
+                    "What comes after Tuesday?", "2 + 2 = ?", "Type 'MAGIC'"
+                ];
                 const task = distractions[Math.floor(Math.random() * distractions.length)];
+                
                 container.innerHTML = `<p class="text-xl font-bold text-white mb-4">${task}</p><input id="distraction-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-center outline-none mb-4"><button onclick="submitDistraction()" class="w-full bg-white text-black font-bold py-3 rounded-xl">VERIFY</button>`;
             }
         }
+
         function showMurdererInput(idx) {
             const q = HINT_QUESTIONS[idx];
             const container = document.getElementById('hint-content-area');
-            container.innerHTML = `<p class="text-sm font-bold text-app-danger mb-2">${q.en}</p><p class="text-xs text-gray-400 italic mb-4">${q.bm}</p><input id="murderer-answer" type="text" class="w-full bg-black/50 border border-app-danger rounded-xl p-3 text-white text-center outline-none mb-4" placeholder="Answer"><button onclick="submitMurdererHint(${idx})" class="w-full bg-app-danger text-white font-bold py-3 rounded-xl">BROADCAST</button>`;
+            container.innerHTML = `
+                <p class="text-sm font-bold text-app-danger mb-2">${q.en}</p>
+                <p class="text-xs text-gray-400 italic mb-4">${q.bm}</p>
+                <input id="murderer-answer" type="text" class="w-full bg-black/50 border border-app-danger rounded-xl p-3 text-white text-center outline-none mb-4" placeholder="Answer">
+                <button onclick="submitMurdererHint(${idx})" class="w-full bg-app-danger text-white font-bold py-3 rounded-xl mb-4">BROADCAST</button>
+                <button onclick="openInventory()" class="w-full bg-app-accent/20 border border-app-accent text-app-accent font-bold py-2 rounded-xl flex items-center justify-center gap-2"><span class="material-icons-round">auto_stories</span> Check Grimoire</button>
+            `;
         }
+
         function submitMurdererHint(idx) {
             const ans = document.getElementById('murderer-answer').value;
             if(!ans) return;
             const q = HINT_QUESTIONS[idx].en;
             logEvent(`🕵️ HINT: ${q} -> ${ans.toUpperCase()}`);
-            db.ref(`games/${roomCode}/hintPhase`).set({ active: false });
+            // Show Success and Return Button
+            const container = document.getElementById('hint-content-area');
+            container.innerHTML = `
+                <div class="py-8 flex flex-col items-center">
+                    <span class="material-icons-round text-4xl text-app-danger animate-pulse">campaign</span>
+                    <h3 class="text-lg font-bold text-white mt-4">HINT BROADCASTED</h3>
+                    <button onclick="closeHintModal()" class="mt-6 w-full bg-white text-black font-bold py-3 rounded-xl">RETURN TO GAME</button>
+                </div>
+            `;
         }
+
         function submitDistraction() {
-            document.getElementById('hint-content-area').innerHTML = `<div class="py-8 flex flex-col items-center"><span class="material-icons-round text-4xl text-green-500 animate-bounce">check_circle</span><h3 class="text-lg font-bold text-white mt-4">VERIFIED</h3></div>`;
+            document.getElementById('hint-content-area').innerHTML = `
+                <div class="py-8 flex flex-col items-center">
+                    <span class="material-icons-round text-4xl text-green-500 animate-bounce">check_circle</span>
+                    <h3 class="text-lg font-bold text-white mt-4">VERIFIED</h3>
+                    <button onclick="closeHintModal()" class="mt-6 w-full bg-white text-black font-bold py-3 rounded-xl">RETURN TO GAME</button>
+                </div>
+            `;
         }
+
+        function closeHintModal() {
+            document.getElementById('modal-hint-phase').classList.add('hidden');
+            document.getElementById('modal-hint-phase').classList.remove('flex');
+        }
+
+        function incrementRound() {
+            db.ref(`games/${roomCode}/round`).transaction(r => (r || 1) + 1);
+        }
+
         function logEvent(m) { db.ref(`games/${roomCode}/log`).push(m); }
         function confirmExit() { if(confirm("Exit?")) switchView('view-home'); }
     </script>
