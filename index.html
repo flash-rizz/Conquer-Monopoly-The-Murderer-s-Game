@@ -263,62 +263,62 @@
         let currentRound = 1;
         const KILL_ROUNDS = [10, 16, 21, 25];
 
-        // --- LAND DATA (CLOCKWISE STARTING FROM ANCIENT STONE) ---
+        // --- UPDATED LAND DATA ---
         const LAND_DATA = [
-            { id: 1, name: "Ancient Stone", price: 600, rent: 40, house: 200 },
-            { id: 2, name: "Mine Entrance", price: 2000, rent: 250, house: 0 }, // Station
-            { id: 3, name: "Royal Palace Gates", price: 5000, rent: 500, house: 2500 },
-            { id: 4, name: "Blue Fairy Kingdom", price: 3500, rent: 350, house: 1750 },
-            { id: 5, name: "Celestial Sky Fortress", price: 3200, rent: 280, house: 1500 },
-            { id: 6, name: "The Lost Temple", price: 3800, rent: 380, house: 1900 },
-            { id: 7, name: "Sky Kingdom", price: 3000, rent: 260, house: 1300 },
-            { id: 8, name: "Enchanted Forest", price: 1000, rent: 60, house: 300 },
-            { id: 9, name: "Goblin Territory", price: 3000, rent: 260, house: 1300 },
-            { id: 10, name: "Jungle Temple", price: 1200, rent: 80, house: 400 },
-            { id: 11, name: "Glacial Barrens", price: 2800, rent: 240, house: 1200 },
-            { id: 12, name: "Halfling Village", price: 2600, rent: 220, house: 1100 },
-            { id: 13, name: "Goblin Market", price: 1400, rent: 100, house: 500 },
-            { id: 14, name: "Secluded Grove", price: 1400, rent: 100, house: 500 },
-            { id: 15, name: "Crystalline Keep", price: 2200, rent: 180, house: 900 },
-            { id: 16, name: "Floating Lava Island", price: 2000, rent: 160, house: 800 },
-            { id: 17, name: "Oasis", price: 1800, rent: 140, house: 700 },
-            { id: 18, name: "Frostbite Valley", price: 2200, rent: 180, house: 900 },
-            { id: 19, name: "Volcanic Wasteland", price: 1600, rent: 120, house: 600 },
-            { id: 20, name: "Ancient Library", price: 1500, rent: 110, house: 550 }, // Normal
-            { id: 21, name: "Blacksmith", price: 2400, rent: 200, house: 1000 },
-            { id: 22, name: "Caribbean", price: 4000, rent: 400, house: 2000 },
-            { id: 23, name: "Bustling Harbor", price: 4200, rent: 420, house: 2100 },
-            { id: 24, name: "Atlantis", price: 3500, rent: 350, house: 1750 },
-            { id: 25, name: "Sky Harbor", price: 2000, rent: 250, house: 0 }, // Station
-            { id: 26, name: "The Kraken", price: 1500, rent: 110, house: 550 }, // Normal
-            { id: 27, name: "Treacherous Mountain", price: 2000, rent: 250, house: 0 }, // Station
-            { id: 28, name: "Enchanted Lake", price: 1200, rent: 80, house: 400 }
+            { id: 1, name: "Ancient Stone", price: 2800, rent: 280, house: 1400 },
+            { id: 2, name: "Mine Entrance", price: 2000, rent: 200, house: 1000 },
+            { id: 3, name: "Royal Palace Gates", price: 4000, rent: 400, house: 2000 },
+            { id: 4, name: "Blue Fairy Kingdom", price: 3000, rent: 300, house: 1500 },
+            { id: 5, name: "Celestial Sky Fortress", price: 3500, rent: 350, house: 1750 },
+            { id: 6, name: "The Lost Temple", price: 2600, rent: 260, house: 1300 },
+            { id: 7, name: "Sky Kingdom", price: 3500, rent: 350, house: 1750 },
+            { id: 8, name: "Enchanted Forest", price: 3000, rent: 300, house: 1500 },
+            { id: 9, name: "Goblin Territory", price: 1800, rent: 180, house: 900 },
+            { id: 10, name: "Jungle Temple", price: 2600, rent: 260, house: 1300 },
+            { id: 11, name: "Glacial Barrens", price: 2500, rent: 250, house: 1250 },
+            { id: 12, name: "Halfling Village", price: 1600, rent: 160, house: 800 },
+            { id: 13, name: "Goblin Market", price: 2000, rent: 200, house: 1000 },
+            { id: 14, name: "Secluded Grove", price: 3000, rent: 300, house: 1500 },
+            { id: 15, name: "Crystalline Keep", price: 1200, rent: 120, house: 600 },
+            { id: 16, name: "Floating Lava Island", price: 1000, rent: 100, house: 500 },
+            { id: 17, name: "Oasis", price: 1000, rent: 100, house: 500 },
+            { id: 18, name: "Frostbite Valley", price: 1400, rent: 140, house: 700 },
+            { id: 19, name: "Volcanic Wasteland", price: 600, rent: 60, house: 300 },
+            { id: 20, name: "Ancient Library", price: 1500, rent: 150, house: 750 },
+            { id: 21, name: "Blacksmith", price: 1800, rent: 180, house: 900 },
+            { id: 22, name: "Caribbean", price: 2400, rent: 240, house: 1200 },
+            { id: 23, name: "Bustling Harbor", price: 2200, rent: 220, house: 1100 },
+            { id: 24, name: "Atlantis", price: 2000, rent: 200, house: 1000 },
+            { id: 25, name: "Sky Harbor", price: 2000, rent: 200, house: 1000 },
+            { id: 26, name: "The Kraken", price: 1500, rent: 150, house: 750 },
+            { id: 27, name: "Treacherous Mountain", price: 2000, rent: 200, house: 1000 },
+            { id: 28, name: "Enchanted Lake", price: 2300, rent: 230, house: 1150 }
         ];
 
         // --- DATA LISTS (WITH DUAL LANGUAGE) ---
 
         const CHEST_CARDS = [
-            { en: "Inheritance: Receive RM 3,000", bm: "Warisan: Terima RM 3,000", type: "money", val: 3000 },
-            { en: "Tax: Pay RM 2,000", bm: "Cukai: Bayar RM 2,000", type: "money", val: -2000 },
+            { en: "Inheritance: Receive RM 3,000", bm: "Warisan: Terima RM 3,000", type: "money" },
+            { en: "Tax: Pay RM 2,000", bm: "Cukai: Bayar RM 2,000", type: "money" },
             { en: "Re-Zone: Change your land with anyone of same value", bm: "Zon Semula: Tukar tanah anda dengan sesiapa yang sama nilai", type: "info" },
-            { en: "Found Mana Crystal: Sell it to the bank. Receive RM 2,500", bm: "Jumpa Kristal Mana: Jual kepada bank. Terima RM 2,500", type: "money", val: 2500 },
-            { en: "Grand Ball: You host a party. Each player pays you RM 500", bm: "Majlis Tari-Menari: Anda anjur parti. Setiap pemain bayar RM 500", type: "money", val: 500 },
+            { en: "Found Mana Crystal: Sell it to the bank. Receive RM 2,500", bm: "Jumpa Kristal Mana: Jual kepada bank. Terima RM 2,500", type: "money" },
+            { en: "Grand Ball: You host a party. Each player pays you RM 500", bm: "Majlis Tari-Menari: Anda anjur parti. Setiap pemain bayar RM 500", type: "money" },
             { en: "Rent Money: Force 1 player to pay any of your property rent", bm: "Duit Sewa: Paksa 1 pemain bayar sewa hartanah anda", type: "info" },
             { en: "Portal Error: Move your token Back 3 Spaces", bm: "Ralat Portal: Gerakkan token anda Undur 3 Tapak", type: "info" },
             { en: "Speed Potion: Advance immediately to GO (Collect Salary)", bm: "Posyen Kelajuan: Maju terus ke GO (Ambil Gaji)", type: "info" },
-            { en: "Goblin Raid: Thieves stole your wallet! Lose RM 1,000", bm: "Serangan Goblin: Pencuri curi dompet anda! Rugi RM 1,000", type: "money", val: -1000 },
+            { en: "Goblin Raid: Thieves stole your wallet! Lose RM 1,000", bm: "Serangan Goblin: Pencuri curi dompet anda! Rugi RM 1,000", type: "money" },
             { en: "Lucky Charm: Get a power card", bm: "Tangkal Bertuah: Dapat kad kuasa", type: "drawPower" },
-            { en: "Property Tax: Pay RM 200 per land you own", bm: "Cukai Harta: Bayar RM 200 setiap tanah anda", type: "propTax", val: 200 },
+            { en: "Property Tax: Pay RM 200 per land you own", bm: "Cukai Harta: Bayar RM 200 setiap tanah anda", type: "money" },
             { en: "Market Boom: All your lands generate Double Rent for the next round", bm: "Pasaran Melonjak: Semua tanah anda jana Sewa Ganda untuk pusingan depan", type: "info" },
             { en: "Haunted: You cannot move next turn (Skip Turn)", bm: "Berhantu: Anda tidak boleh gerak pusingan depan (Langkau)", type: "info" },
             { en: "Land Grant: Advance to the nearest Empty Land. If unowned, you get it for free!", bm: "Geran Tanah: Maju ke Tanah Kosong terdekat. Jika tiada tuan, dapat percuma!", type: "info" },
             { en: "Cursed Mirror: You may swap cash balances with the player based on the dice.", bm: "Cermin Sumpahan: Anda boleh tukar baki tunai dengan pemain berdasarkan dadu.", type: "info" },
             { en: "Invisibility: You are immune to Rent and Stealing for 1 round.", bm: "Halimunan: Anda kebal dari Sewa dan Curi untuk 1 pusingan.", type: "info" },
             { en: "Dark Lottery: Roll a die. If 1-3, lose RM 1,000. If 4-6, gain RM 2,000.", bm: "Loteri Gelap: Baling dadu. 1-3 rugi RM 1,000. 4-6 untung RM 2,000.", type: "info" },
-            { en: "Magic Show: You perform street magic. Every player gives you RM 200.", bm: "Pertunjukan Silap Mata: Anda buat persembahan. Setiap pemain beri RM 200.", type: "money", val: 200 },
+            { en: "Magic Show: You perform street magic. Every player gives you RM 200.", bm: "Pertunjukan Silap Mata: Anda buat persembahan. Setiap pemain beri RM 200.", type: "money" },
             { en: "Sudden Storm: All players must move Back 2 Spaces. But nothing will happen.", bm: "Ribut Tiba-tiba: Semua pemain mesti undur 2 Tapak. Tetapi tiada apa berlaku.", type: "info" },
             { en: "Open Portal: Advance to any place with the theme of forest", bm: "Buka Portal: Maju ke mana-mana tempat tema hutan", type: "info" },
-            { en: "Renovation: Pay RM 500 per House you own.", bm: "Ubah Suai: Bayar RM 500 setiap Rumah anda.", type: "houseTax", val: 500 },
+            { en: "Renovation: Pay RM 500 per House you own.", bm: "Ubah Suai: Bayar RM 500 setiap Rumah anda.", type: "money" },
             { en: "Get Hint: You may ask for a hint.", bm: "Dapatkan Petunjuk: Anda boleh minta satu petunjuk.", type: "info" }
         ];
 
@@ -355,7 +355,7 @@
             { en: "Flip a Coin - Heads Win", bm: "Lambung Syiling - Kepala Menang" },
             { en: "Dice Duel (Highest Roll Wins)", bm: "Duel Dadu (Nombor Tertinggi Menang)" },
             { en: "Coin Flip Duel", bm: "Duel Lambung Syiling" },
-            { en: "Alphabet Backwards: Recite the alphabet from J to A without pausing more than 5 seconds", bm: "Abjad Terbalik: Sebut abjad dari J ke A tanpa henti lebih 5 saat" },
+            { en: "Alphabet Backwards: Recite the alphabet from Z to T without pausing more than 5 seconds", bm: "Abjad Terbalik: Sebut abjad dari Z ke T tanpa henti lebih 5 saat" },
             { en: "Prediction: Guess if your next roll is Odd or Even", bm: "Ramalan: Teka balingan seterusnya Ganjil atau Genap" },
             { en: "Name 10: Name 10 fruits in 15 seconds.", bm: "Nama 10: Namakan 10 buah dalam 15 saat." },
             { en: "Coin Flip Duel: Both flip a coin. Matching = Challenger wins. Different = Defender wins.", bm: "Duel Syiling: Kedua lambung. Sama = Pencabar Menang. Beza = Pertahan Menang." },
@@ -366,9 +366,7 @@
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 21 without going over.", bm: "Blackjack: Baling dadu paling dekat 21." },
             { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah Genap=A, Ganjil=B." },
-            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." },
-            { en: "3 Finger Rule: player need to show 1-3 finger, if it's the same, lose."}
-
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
         ];
 
         const COMPETES = [
@@ -382,9 +380,7 @@
             { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
             { en: "Blackjack: Roll dice one at a time. Get closest to 15 without going over.", bm: "Blackjack: Paling dekat 15 tanpa lebih." },
             { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah jari. Genap=A, Ganjil=B." },
-            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." },
-            { en: "3 Finger Rule: player need to show 1-3 finger, if it's the same, lose."}
-
+            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
         ];
 
         const HINT_QUESTIONS = [
