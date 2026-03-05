@@ -59,6 +59,22 @@ def get_murderer_questions():
     ]
     return random.sample(questions, 3)
 
+def check_win_condition():
+    """Checks if a player has won the game."""
+    alive_players = [player_id for player_id, data in GAME_STATE['players'].items() if data['is_alive']]
+    
+    # Check if only one player is left alive
+    if len(alive_players) == 1:
+        winner = alive_players[0]
+        return {"winner": winner, "reason": "Last player standing"}
+    
+    # Check if any player has RM50,000 or more in cash
+    for player_id, data in GAME_STATE['players'].items():
+        if data['cash'] >= 50000:
+            return {"winner": player_id, "reason": "Reached RM50,000 cash"}
+    
+    return None
+
 # --- 1. SETUP & ROLES ENDPOINTS ---
 
 @app.route('/game/start', methods=['POST'])
@@ -123,6 +139,15 @@ def transfer_cash():
     if receiver != 'Bank':
         GAME_STATE['players'][receiver]['cash'] += amount
 
+    # Check for win condition after the transaction
+    win_result = check_win_condition()
+    if win_result:
+        return jsonify({
+            "status": "WIN",
+            "winner": win_result['winner'],
+            "reason": win_result['reason']
+        })
+    
     return jsonify({
         "message": f"Transfer of RM {amount} successful.",
         "sender_cash": GAME_STATE['players'][sender]['cash'],
@@ -212,6 +237,16 @@ def kill_player():
     
     # In a real app, broadcast elimination.
     print(f"\n*** PLAYER ELIMINATED ***: {target_id} was eliminated by {reason}.\n")
+
+    # Check for win condition after elimination
+    win_result = check_win_condition()
+    if win_result:
+        return jsonify({
+            "status": "WIN",
+            "winner": win_result['winner'],
+            "reason": win_result['reason']
+        })
+    
     return jsonify({"message": f"{target_id} eliminated."})
 
 
@@ -232,11 +267,32 @@ def handle_accusation():
     else:
         # Incorrect Guess - Accuser is eliminated (self-kill)
         kill_result = kill_player(json={"target_id": accuser_id, "reason": "Failed Accusation"})
+        
+        # Check for win condition after failed accusation
+        win_result = check_win_condition()
+        if win_result:
+            return jsonify({
+                "status": "WIN",
+                "winner": win_result['winner'],
+                "reason": win_result['reason']
+            })
+        
         return jsonify({
             "status": "FAILURE",
             "message": f"ACCUSATION FAILED! {accuser_id} has been eliminated (Self-Kill)."
         })
 
+@app.route('/game/check_win', methods=['GET'])
+def check_win():
+    """Endpoint to check if a player has won."""
+    result = check_win_condition()
+    if result:
+        return jsonify({
+            "status": "WIN",
+            "winner": result['winner'],
+            "reason": result['reason']
+        })
+    return jsonify({"status": "NO_WINNER"})
 
 if __name__ == '__main__':
     # You would typically run this on a server accessible to all phones.

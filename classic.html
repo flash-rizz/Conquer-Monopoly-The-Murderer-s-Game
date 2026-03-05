@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Conquer - Classic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], wizard: ['Cinzel', 'serif'] }, colors: { app: { bg: '#0a0a0a', card: '#161616', accent: '#8b5cf6', danger: '#ef4444', success: '#10b981', text: '#e5e5e5', muted: '#a3a3a3' } }, animation: { 'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards', 'slide-up': 'slideUp 0.3s ease-out forwards' }, keyframes: { popIn: { '0%': { opacity: '0', transform: 'scale(0.5)' }, '100%': { opacity: '1', transform: 'scale(1)' } }, slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } } } } } }
+    </script>
+    <style>body::-webkit-scrollbar { display: none; } .wizard-border { border: 1px solid #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }</style>
+</head>
+<body class="bg-app-bg text-app-text min-h-screen font-sans antialiased pb-24 overflow-x-hidden">
+
+    <audio id="snd-cash" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=success-1-6297.mp3" preload="auto"></audio>
+    <audio id="snd-alert" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=notification-sound-7062.mp3" preload="auto"></audio>
+
+    <div id="global-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6 bg-black/90 backdrop-blur-md">
+        <div class="bg-app-card border-2 border-app-accent w-full max-w-sm p-6 rounded-3xl shadow-2xl text-center animate-pop-in">
+            <div id="alert-icon-box" class="w-20 h-20 bg-app-accent/20 rounded-full flex items-center justify-center mx-auto mb-4"><span id="alert-icon" class="material-icons-round text-5xl text-app-accent">campaign</span></div>
+            <h2 id="alert-title" class="text-2xl font-black uppercase italic mb-2 text-white tracking-wider font-wizard">ALERT</h2>
+            <div id="alert-msg" class="text-lg font-medium text-gray-300 mb-6 leading-relaxed whitespace-pre-wrap">Something happened.</div>
+            <button onclick="closeGlobalAlert()" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:scale-105 transition-transform">OK</button>
+        </div>
+    </div>
+
+    <div id="eliminated-overlay" class="fixed inset-0 z-[200] bg-black/95 hidden flex-col items-center justify-center backdrop-blur-md text-center p-6">
+        <span class="material-icons-round text-8xl text-red-600 mb-6 animate-pulse">sentiment_very_dissatisfied</span>
+        <h2 class="text-4xl font-black text-red-500 uppercase font-wizard mb-4 tracking-widest">Eliminated</h2>
+        <p class="text-gray-400 text-xl font-wizard mb-8">You have been eliminated.</p>
+        <button onclick="reviveAndReturn()" class="mt-4 bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.5)]">
+            RETURN TO GAME
+        </button>
+    </div>
+
+    <div id="modal-player-select" class="fixed inset-0 z-[130] hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div class="bg-[#18181b] w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 shadow-2xl animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="player-select-title" class="text-xl font-bold text-white font-wizard">Select Player</h3>
+                <button onclick="closePlayerSelect()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
+            </div>
+            <div id="player-list-container" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <main id="app-container" class="max-w-md mx-auto min-h-screen relative flex flex-col p-4">
+        <div id="view-game" class="flex flex-col flex-1 pt-2 relative">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="confirmExit()" class="p-2 -ml-2 rounded-full hover:bg-white/10 text-white flex items-center gap-1">
+                    <span class="material-icons-round">arrow_back</span> <span class="text-xs font-bold uppercase">Exit</span>
+                </button>
+                <div class="flex gap-2">
+                     <div class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30">Room: <span id="display-room-code" class="text-white">...</span></div>
+                    <div id="display-cash-badge" class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-app-success border border-green-500/30">RM 0</div>
+                </div>
+            </div>
+
+            <div class="text-center mb-6 relative">
+                <div class="bg-app-card border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+                    <div>
+                        <div class="w-24 h-24 bg-[#0a0a0a] rounded-2xl mx-auto mb-4 flex items-center justify-center border-2 border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
+                            <span class="material-icons-round text-6xl text-white">person</span> 
+                        </div>
+                        <h3 id="role-name" class="text-3xl font-bold text-white mb-2 font-wizard">Loading...</h3>
+                        <div class="flex justify-center gap-3 mt-4">
+                            <div class="bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                                <span class="block text-[10px] text-app-muted uppercase tracking-wider mb-1">Status</span>
+                                <span class="text-sm font-bold text-white">Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="openInventory()" class="w-full mb-4 bg-app-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 active:scale-95 transition-all group">
+                <div class="flex items-center gap-3">
+                    <div class="bg-purple-900/30 p-2 rounded-lg text-purple-400 border border-purple-500/20"><span class="material-icons-round">account_balance_wallet</span></div>
+                    <div class="text-left"><span class="block font-bold text-sm text-white font-wizard">Portfolio</span><span class="block text-xs text-app-muted">Assets & Cards</span></div>
+                </div>
+                <span class="material-icons-round text-app-muted group-hover:translate-x-1 transition-transform">chevron_right</span>
+            </button>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="openPlayerSelect(performPay, 'Select Player to Pay')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-app-success">payments</span><span class="text-xs font-bold">Pay Player</span></button>
+                <button onclick="performAction('bank')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-app-danger">account_balance</span><span class="text-xs font-bold">Bank</span></button>
+                <button onclick="performAction('chest')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-blue-400">inventory_2</span><span class="text-xs font-bold">Chest</span></button>
+                <button onclick="performAction('power')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-amber-500">bolt</span><span class="text-xs font-bold">Power</span></button>
+                <button onclick="performAction('land')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-purple-400">flag</span><span class="text-xs font-bold">Claim Land</span></button>
+                <button onclick="performAction('challenge')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-orange-500">sports_kabaddi</span><span class="text-xs font-bold">Challenge</span></button>
+                <button onclick="openPlayerSelect(performSteal, 'Select Player to Steal From')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-red-500">handyman</span><span class="text-xs font-bold">Steal</span></button>
+                <button onclick="performCompete()" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2"><span class="material-icons-round text-blue-500">casino</span><span class="text-xs font-bold">Compete</span></button>
+            </div>
+
+            <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col">
+                <div class="flex items-center gap-2 mb-3 opacity-50"><span class="material-icons-round text-sm">history</span><span class="text-xs font-bold uppercase tracking-wide">Log</span></div>
+                <div id="game-feed-list" class="space-y-3 overflow-y-auto text-xs flex-1"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-inventory" class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm hidden flex-col justify-end">
+        <div class="bg-[#121212] rounded-t-3xl p-6 h-[85vh] flex flex-col border-t border-purple-500/30 shadow-[0_-10px_40px_rgba(139,92,246,0.1)] animate-slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-white font-wizard">Portfolio</h2>
+                <button onclick="closeInventory()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">bolt</span> Action Cards</h3>
+                <div id="inventory-powers" class="grid grid-cols-2 gap-3 overflow-y-auto max-h-40"></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto border-t border-white/10 pt-4 pb-10">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">map</span> Owned Lands</h3>
+                <div id="inventory-lands" class="space-y-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo", authDomain: "conquer-ff3a6.firebaseapp.com", databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "conquer-ff3a6", storageBucket: "conquer-ff3a6.firebasestorage.app", messagingSenderId: "172263193906", appId: "1:172263193906:web:f2c43b9b02cb421e0feb2b", measurementId: "G-D1GZTSP2SM" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const params = new URLSearchParams(window.location.search);
+        const roomCode = params.get('room');
+        const myName = params.get('name');
+        let myCash = 0, playerSelectCallback = null;
+
+        if(!roomCode || !myName) window.location.href = 'index.html';
+
+        const LAND_DATA = [
+            { id: 1, name: "Ancient Stone", price: 2800, rent: 280, house: 1400 }, { id: 2, name: "Mine Entrance", price: 2000, rent: 200, house: 1000 }, { id: 3, name: "Royal Palace Gates", price: 4000, rent: 400, house: 2000 }, { id: 4, name: "Blue Fairy Kingdom", price: 3000, rent: 300, house: 1500 }, { id: 5, name: "Celestial Sky Fortress", price: 3500, rent: 350, house: 1750 }, { id: 6, name: "The Lost Temple", price: 2600, rent: 260, house: 1300 }, { id: 7, name: "Sky Kingdom", price: 3500, rent: 350, house: 1750 }, { id: 8, name: "Enchanted Forest", price: 3000, rent: 300, house: 1500 }, { id: 9, name: "Goblin Territory", price: 1800, rent: 180, house: 900 }, { id: 10, name: "Jungle Temple", price: 2600, rent: 260, house: 1300 }, { id: 11, name: "Glacial Barrens", price: 2500, rent: 250, house: 1250 }, { id: 12, name: "Halfling Village", price: 1600, rent: 160, house: 800 }, { id: 13, name: "Goblin Market", price: 2000, rent: 200, house: 1000 }, { id: 14, name: "Secluded Grove", price: 3000, rent: 300, house: 1500 }, { id: 15, name: "Crystalline Keep", price: 1200, rent: 120, house: 600 }, { id: 16, name: "Floating Lava Island", price: 1000, rent: 100, house: 500 }, { id: 17, name: "Oasis", price: 1000, rent: 100, house: 500 }, { id: 18, name: "Frostbite Valley", price: 1400, rent: 140, house: 700 }, { id: 19, name: "Volcanic Wasteland", price: 600, rent: 60, house: 300 }, { id: 20, name: "Ancient Library", price: 1500, rent: 150, house: 750 }, { id: 21, name: "Blacksmith", price: 1800, rent: 180, house: 900 }, { id: 22, name: "Caribbean", price: 2400, rent: 240, house: 1200 }, { id: 23, name: "Bustling Harbor", price: 2200, rent: 220, house: 1100 }, { id: 24, name: "Atlantis", price: 2000, rent: 200, house: 1000 }, { id: 25, name: "Sky Harbor", price: 2000, rent: 200, house: 1000 }, { id: 26, name: "The Kraken", price: 1500, rent: 150, house: 750 }, { id: 27, name: "Treacherous Mountain", price: 2000, rent: 200, house: 1000 }, { id: 28, name: "Enchanted Lake", price: 2300, rent: 230, house: 1150 }
+        ];
+
+        // Filtered Classic Cards (No mystery related cards)
+        const CHEST_CARDS = [
+            { en: "Inheritance: Receive RM 3,000", bm: "Warisan: Terima RM 3,000", type: "money" }, 
+            { en: "Tax: Pay RM 2,000", bm: "Cukai: Bayar RM 2,000", type: "money" }, 
+            { en: "Re-Zone: Change your land with anyone", bm: "Zon Semula: Tukar tanah anda", type: "info" }, 
+            { en: "Found Mana Crystal: Sell it to the bank. Receive RM 2,500", bm: "Jumpa Kristal Mana: Terima RM 2,500", type: "money" }, 
+            { en: "Grand Ball: Each player pays you RM 500", bm: "Majlis Tari-Menari: Pemain bayar RM 500", type: "money" }, 
+            { en: "Rent Money: Force 1 player to pay rent of any Land you own", bm: "Duit Sewa: Paksa 1 pemain bayar sewa", type: "info" }, 
+            { en: "Portal Error: Move Back 3 Spaces", bm: "Ralat Portal: Undur 3 Tapak", type: "info" }, 
+            { en: "Speed Potion: Advance to GO (Collect Salary)", bm: "Posyen Kelajuan: Maju terus ke GO", type: "info" }, 
+            { en: "Goblin Raid: Lose RM 1,000", bm: "Serangan Goblin: Rugi RM 1,000", type: "money" }, 
+            { en: "Lucky Charm: Get a power card", bm: "Tangkal Bertuah: Dapat kad kuasa", type: "drawPower" }, 
+            { en: "Property Tax: Pay RM 200 per land you own", bm: "Cukai Harta: Bayar RM 200 setiap tanah", type: "money" }, 
+            { en: "Market Boom: Double Rent next round", bm: "Pasaran Melonjak: Sewa Ganda", type: "info" }, 
+            { en: "Haunted: Skip Turn", bm: "Berhantu: Langkau giliran", type: "info" }, 
+            { en: "Compete with a Player if you win the loser pays all rent on lands they own", type: "info" }, 
+            { en: "Do a challenge and if win you can select any land on that row that isn't own", type: "info" }, 
+            { en: "Money Drop: Throw the probability Dice and Bank will pay you the result Rm x100", type: "info" }, 
+            { en: "Jenga Time: take as much block you want, if succeed the amount of block Rm x500", type: "info" }, 
+            { en: "Time travel: Pick whether going forward or backward, roll the dice and move based on the dice", type: "info" },
+            { en: "Get 1 house to any of your property", type: "info" }, 
+            { en: "Get a power card", type: "info"}, 
+            { en: "Compete to get a power card, winner takes the card", type: "info"}, 
+            { en: "Land Grant: Advance to Empty Land", bm: "Geran Tanah: Maju ke Tanah Kosong", type: "info" }];
+
+        const POWER_CARDS = [
+            { en: "Double Move: Move again.", bm: "Gerak Ganda: Gerak lagi." }, 
+            { en: "Stop Move: Freeze a player 1 turn.", bm: "Henti Gerak: Bekukan pemain." }, 
+            { en: "Steal 1k: Steal RM 1,500 from 1 player or bank.", bm: "Curi 1k: Curi RM 1,500." }, 
+            { en: "Block Rent: Avoid rent once.", bm: "Sekat Sewa: Elak bayar sewa." }, 
+            { en: "Bribe the Guard: Get out of jail.", bm: "Rasuah Pengawal: Keluar penjara." }, 
+            { en: "Stop Time: Move instantly, replace current player turn with your own and resume the person after you.", bm: "Teleportasi: Gerak serta-merta." }, 
+            { en: "Earthquake: Demolish 1 House.", bm: "Gempa Bumi: Roboh 1 Rumah." }, 
+            { en: "Debuff: Force everyone to drop 1 Power Card", bm: "Nyah-Kuasa: Buang 1 Kad." }, 
+            { en: "Dice Hack: Change dice to 6.", bm: "Godam Dadu: Tukar dadu ke 6." }, 
+            { en: "Pickpocket: Steal RM 500 from left.", bm: "Seluk Saku: Curi RM 500." },
+            { en: "Just Say no: can be played anytime and can be stacked"}, 
+            { en: "Denial: Deny a player turn"}, 
+            { en: "Swap up to 3 property of yours with 1 player"}, 
+            { en: "Steal a player land"}, 
+            { en: "Duel time: Compete with the current player, can choose any of the player's land, if win take it"}, 
+            { en: "set the future: you can determined how many step the current player can move"}, 
+            { en: "Flash Sale: Buy property 50% OFF.", bm: "Jualan Kilat: DISKAUN 50%." }
+        ];
+
+        const CHALLENGES = [
+            { en: "Roll dice on probability, more than 12 wins", bm: "Namakan 5 negara dalam 10s" }, 
+            { en: "Dice Duel (Highest Wins)", bm: "Duel Dadu (Tertinggi Menang)" }, 
+            { en: "Coin Flip Duel", bm: "Duel Syiling" }, 
+            { en: "Blackjack: Closest to 21 wins.", bm: "Blackjack: Paling dekat 21 menang." },
+            { en: "Host give a word, the player must spelled it out quickly"}, 
+            { en: "The host Tell a story, the player determine whether its a lie or truth"}, 
+            { en: "Pick a category, go on streaks naming it, first player to blank in 5 seconds lose"}, 
+            { en: "A player choose 1-100, second player have to guess it in 5 tries"}, 
+            { en: "Jenga: rival player choose any row except for 1 block or 2 without middle, if the player can take that block, win"}, 
+            { en: "Name a movie from A-Z in turns except 'Q', first to blank in 5 seconds lose"},
+            { en: "Name an animal from A-Z in turns except 'Q', first to blank in 5 seconds lose"},  
+            { en: "Name nations from A-Z in turns except 'Q' , first to blank in 5 seconds lose "}, 
+            { en: "Riddle me: Pick a category (agreed by both), both players think of a name, take turns in questioning, first to guess win (one guess per turn)"},             
+            { en: "A host ask questions on general knowledge first to get 3 points wins."}, 
+            { en: "A Host pick a number both player has to guess it, the closest win"}, 
+            { en: "Words game : The 10 game, player count to 10 and replace number with word along the way."}, 
+            { en: "Act game: the 10 game, player count to 10 and replace number with action along the way"}, 
+            { en: "Jenga: First to fall lose"}, 
+            { en: "Coin flip Battle"}, 
+            { en: "Throw money: Player enter amount to give to bank at the same time, highest amount win, winner take at stakes"},
+            { en: "Convince a player chosen by dice to give you the winning, you may bribe & give land etc anything"}
+            
+        ];
+
+        const COMPETE_CARDS = [
+            { en: "Dice Duel", bm: "Duel Dadu" },
+            { en: "Rock Paper Scissors", bm: "Batu Gunting Kertas" },
+            { en: "Pick a category, go on streaks naming it, first player to blank in 5 seconds lose"}, 
+            { en: "A player choose 1-100, second player have to guess it in 5 tries"}, 
+            { en: "Jenga: rival player choose any row except for 1 block or 2 without middle, if the player can take that block, win"}, 
+            { en: "Name a movie from A-Z in turns except 'Q', first to blank in 5 seconds lose"},
+            { en: "Name an animal from A-Z in turns except 'Q', first to blank in 5 seconds lose"},  
+            { en: "Name nations from A-Z in turns except 'Q' , first to blank in 5 seconds lose "}, 
+            { en: "Riddle me: Pick a category (agreed by both), both players think of a name, take turns in questioning, first to guess win (one guess per turn)"},             
+            { en: "A host ask questions on general knowledge first to get 3 points wins."}, 
+            { en: "A Host pick a number both player has to guess it, the closest win"}, 
+            { en: "Words game : The 10 game, player count to 10 and replace number with word along the way."}, 
+            { en: "Act game: the 10 game, player count to 10 and replace number with action along the way"}, 
+            { en: "Jenga: First to fall lose"}, 
+            { en: "Coin flip Battle"}, 
+            { en: "Throw money: Player enter amount to give to bank at the same time, highest amount win, winner take at stakes"}, 
+            { en: "Blackjack: Closest to 21 wins.", bm: "Blackjack: Paling dekat 21 menang." }
+        ];
+
+        window.onload = function() {
+            document.getElementById('display-room-code').innerText = roomCode;
+            document.getElementById('role-name').innerText = myName; // Use Name for Classic
+            listenForGlobalAlerts();
+            
+            db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', s => { 
+                myCash = s.val() || 0; document.getElementById('display-cash-badge').innerText=`RM ${myCash}`; 
+            });
+            db.ref(`games/${roomCode}/log`).on('child_added', s => {
+                const d = document.createElement('div');
+                d.className = "flex gap-2 text-xs border-b border-white/5 pb-1 mb-1 text-gray-400";
+                d.innerHTML = `<span>${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span> <span class="text-white">${s.val()}</span>`;
+                document.getElementById('game-feed-list').prepend(d);
+            });
+        };
+
+        function triggerGlobalAlert(t, m, i="info") { db.ref(`games/${roomCode}/globalAlert`).set({ title: t, message: m, icon: i, timestamp: Date.now() }); }
+        
+        function listenForGlobalAlerts() {
+            db.ref(`games/${roomCode}/globalAlert`).on('value', snap => {
+                if(!snap.exists()) return;
+                const data = snap.val();
+                if (Date.now() - data.timestamp < 5000) {
+                    if(data.icon !== "payments") document.getElementById('snd-alert').play().catch(e=>{});
+                    showBigBox(data.title, data.message, data.icon);
+                }
+            });
+            db.ref(`games/${roomCode}/players/${myName}/notification`).on('value', snap => {
+                if(!snap.exists()) return;
+                const data = snap.val();
+                if (Date.now() - data.timestamp < 5000) {
+                    document.getElementById('snd-cash').play().catch(e => {});
+                    showBigBox("PAYMENT RECEIVED", data.message, "payments");
+                }
+            });
+        }
+
+        function showBigBox(t, m, i) {
+            document.getElementById('alert-title').innerText = t; document.getElementById('alert-msg').innerText = m; document.getElementById('alert-icon').innerText = i;
+            document.getElementById('global-alert-modal').classList.remove('hidden'); document.getElementById('global-alert-modal').classList.add('flex');
+        }
+        function closeGlobalAlert() { document.getElementById('global-alert-modal').classList.add('hidden'); document.getElementById('global-alert-modal').classList.remove('flex'); }
+
+        function openInventory() {
+            document.getElementById('modal-inventory').classList.remove('hidden'); document.getElementById('modal-inventory').classList.add('flex');
+            
+            db.ref(`games/${roomCode}/players/${myName}/lands`).once('value', snap => {
+                const c = document.getElementById('inventory-lands'); c.innerHTML = '';
+                if(snap.exists()) {
+                    const lands = snap.val();
+                    Object.keys(lands).forEach(k => {
+                        const landId = parseInt(k);
+                        const landInfo = LAND_DATA.find(l => l.id === landId);
+                        if (landInfo) {
+                            c.innerHTML += `<div class="bg-[#1a1a1a] wizard-border rounded-lg overflow-hidden mb-4 relative group"><div class="h-4 bg-app-accent w-full border-b border-[#d4af37]"></div><div class="p-4 text-center"><div class="text-xs text-gray-500 font-bold mb-1">LAND #${landId}</div><h4 class="font-bold text-lg text-white mb-1"><span class="text-app-accent mr-2">#${landId}</span>${landInfo.name}</h4><div class="flex justify-around text-xs text-gray-400 mt-2 border-t border-white/10 pt-2"><div><span class="block text-[#d4af37]">RENT</span>RM ${landInfo.rent}</div><div><span class="block text-[#d4af37]">1 HOUSE</span>RM ${landInfo.house}</div></div></div></div>`;
+                        }
+                    });
+                } else c.innerHTML = '<div class="text-gray-500 text-center italic">No properties owned.</div>';
+            });
+
+            db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
+                const c = document.getElementById('inventory-powers'); c.innerHTML = '';
+                if(snap.exists()) {
+                    const cards = snap.val();
+                    Object.keys(cards).forEach(k => {
+                        const cardData = cards[k];
+                        c.innerHTML += `<button onclick="usePowerCard('${k}')" class="bg-[#2a2a2a] border border-amber-500/30 p-3 rounded-xl text-center hover:bg-amber-900/20"><div class="text-amber-500 font-bold text-sm">${cardData.en}</div><div class="text-[10px] text-gray-400 italic">${cardData.bm}</div><div class="text-[10px] text-gray-500 uppercase mt-1">Tap to Use</div></button>`;
+                    });
+                } else c.innerHTML = '<div class="col-span-2 text-gray-500 text-center italic">No Action Cards.</div>';
+            });
+        }
+        function closeInventory() { document.getElementById('modal-inventory').classList.add('hidden'); document.getElementById('modal-inventory').classList.remove('flex'); }
+        
+        function usePowerCard(k) {
+            const cardRef = db.ref(`games/${roomCode}/players/${myName}/powerCards/${k}`);
+            cardRef.once('value', snap => {
+                if (!snap.exists()) return;
+                const cardData = snap.val();
+                if(confirm(`Use card "${cardData.en}"?`)) {
+                    cardRef.remove();
+                    triggerGlobalAlert("CARD PLAYED", `${myName} used ${cardData.en}!`, "auto_fix_high");
+                    logEvent(`⚡ ${myName} used ${cardData.en}`);
+                    closeInventory();
+                }
+            });
+        }
+
+        function performAction(t) {
+            if(t === 'land') {
+                const n = parseInt(prompt("Enter Land # (1-28):"));
+                if(!n || n < 1 || n > 28) return alert("Invalid Land #");
+                const land = LAND_DATA.find(l => l.id === n);
+                if(confirm(`Buy ${land.name}?\nPrice: RM ${land.price}`)) {
+                    const ref = db.ref(`games/${roomCode}/ownership/${n}`);
+                    ref.once('value', s => {
+                        if(s.exists()) return alert(`Owned by ${s.val()}!`);
+                        if (myCash < land.price) return alert("Not enough money!");
+                        
+                        db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash - land.price);
+                        ref.set(myName);
+                        db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
+                        triggerGlobalAlert("PROPERTY BOUGHT", `${myName} bought ${land.name}!`, "flag");
+                        logEvent(`${myName} bought ${land.name}`);
+                    });
+                }
+            } else if(t === 'bank') {
+                const a = parseInt(prompt("Amount (- to pay, + to receive):"));
+                if(a) { 
+                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash+a); 
+                    logEvent(`${myName} ${a>0?'received':'paid'} RM ${Math.abs(a)} from/to Bank`); 
+                }
+            } else if(t === 'chest') {
+                const pick = CHEST_CARDS[Math.floor(Math.random()*CHEST_CARDS.length)];
+                alert(`${pick.en}\n\n${pick.bm}`);
+                if(pick.type === "drawPower") performAction('power');
+                logEvent(`${myName} drew Chest: ${pick.en}`);
+            } else if(t === 'power') {
+                const pick = POWER_CARDS[Math.floor(Math.random()*POWER_CARDS.length)];
+                alert(`Card: ${pick.en}\n\n${pick.bm}`);
+                db.ref(`games/${roomCode}/players/${myName}/powerCards`).push(pick);
+            } else if (t === 'challenge') {
+                const c = CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
+                alert(`CHALLENGE:\n${c.en}\n\n${c.bm}`);
+                logEvent(`${myName} Challenge: ${c.en}`);
+            }
+        }
+
+        function openPlayerSelect(cb, t="Select") {
+            playerSelectCallback = cb; document.getElementById('player-select-title').innerText = t;
+            const l = document.getElementById('player-list-container'); l.innerHTML = 'Loading...';
+            document.getElementById('modal-player-select').classList.remove('hidden'); document.getElementById('modal-player-select').classList.add('flex');
+            db.ref(`games/${roomCode}/players`).once('value', s => {
+                l.innerHTML = '';
+                s.forEach(c => {
+                    if(c.key !== myName) {
+                        const b = document.createElement('button');
+                        b.className = "w-full bg-[#27272a] p-4 rounded-xl flex justify-between items-center mb-2 hover:bg-white/5";
+                        b.innerHTML = `<span class="font-bold text-white">${c.key}</span><span class="material-icons-round text-purple-500">chevron_right</span>`;
+                        b.onclick = () => { closePlayerSelect(); if(playerSelectCallback) playerSelectCallback(c.key); };
+                        l.appendChild(b);
+                    }
+                });
+            });
+        }
+        function closePlayerSelect() { document.getElementById('modal-player-select').classList.add('hidden'); document.getElementById('modal-player-select').classList.remove('flex'); }
+        
+        function performPay(targetPlayer) {
+            const amount = parseInt(prompt(`Pay ${targetPlayer} amount:`));
+            if (amount && myCash >= amount) {
+                updatePlayerCash(myName, -amount);
+                updatePlayerCash(targetPlayer, amount);
+                db.ref(`games/${roomCode}/players/${targetPlayer}/notification`).set({ message: `Received RM ${amount} from ${myName}`, timestamp: Date.now() });
+                logEvent(`${myName} paid RM ${amount} to ${targetPlayer}`);
+            } else if (amount) {
+                alert("Not enough cash!");
+            }
+        }
+
+        function performSteal(targetPlayer) {
+            db.ref(`games/${roomCode}/players/${targetPlayer}/lands`).once('value', snap => {
+                if (!snap.exists() || snap.numChildren() === 0) {
+                    alert(`${targetPlayer} has no lands to steal.`);
+                    return;
+                }
+                const lands = snap.val();
+                const landIds = Object.keys(lands);
+                const landId = parseInt(prompt(`Select a land to steal:\n${landIds.join(', ')}`));
+                if (!landIds.includes(String(landId))) {
+                    alert("Invalid land selection.");
+                    return;
+                }
+                db.ref(`games/${roomCode}/ownership/${landId}`).set(myName);
+                db.ref(`games/${roomCode}/players/${myName}/lands/${landId}`).set(true);
+                removeLandFromPlayer(targetPlayer, landId);
+                triggerGlobalAlert("LAND STOLEN", `${myName} stole land #${landId} from ${targetPlayer}!`, "handyman");
+                logEvent(`🔴 ${myName} stole land #${landId} from ${targetPlayer}`);
+            });
+        }
+
+        function checkElimination(playerId) {
+            db.ref(`games/${roomCode}/players/${playerId}`).once('value', snap => {
+                const player = snap.val();
+                if (player.cash === 0 && (!player.lands || Object.keys(player.lands).length === 0)) {
+                    db.ref(`games/${roomCode}/players/${playerId}/status`).set("Dead");
+                    triggerGlobalAlert("PLAYER ELIMINATED", `${playerId} has been eliminated!`, "sentiment_very_dissatisfied");
+                    logEvent(`💀 ${playerId} was eliminated due to bankruptcy.`);
+                }
+            });
+        }
+
+        // Update cash and check elimination
+        function updatePlayerCash(playerId, amount) {
+            db.ref(`games/${roomCode}/players/${playerId}/cash`).transaction(cash => {
+                const newCash = (cash || 0) + amount;
+                return newCash < 0 ? 0 : newCash;
+            }, () => {
+                checkElimination(playerId);
+                checkWinCondition();
+            });
+        }
+
+        // Call checkElimination after land is removed
+        function removeLandFromPlayer(playerId, landId) {
+            db.ref(`games/${roomCode}/players/${playerId}/lands/${landId}`).remove(() => {
+                checkElimination(playerId);
+                checkWinCondition();
+            });
+        }
+
+        function performCompete() {
+            const pick = COMPETE_CARDS[Math.floor(Math.random() * COMPETE_CARDS.length)];
+            alert(`COMPETE:\n${pick.en}\n\n${pick.bm}`);
+            logEvent(`${myName} competed: ${pick.en}`);
+        }
+
+        function reviveAndReturn() {
+            db.ref(`games/${roomCode}/players/${myName}/status`).set("Alive");
+            document.getElementById('eliminated-overlay').classList.add('hidden');
+            document.getElementById('eliminated-overlay').classList.remove('flex');
+            triggerGlobalAlert("REVIVED", `${myName} has returned to the game!`, "favorite");
+            logEvent(`💖 ${myName} revived and returned to the game.`);
+        }
+
+        function checkWinCondition() {
+            db.ref(`games/${roomCode}/players`).once('value', snap => {
+                let aliveCount = 0, totalCash = 0, totalLands = 0, allLandsOwned = true;
+                snap.forEach(p => {
+                    const player = p.val();
+                    if (player.status !== "Dead") aliveCount++;
+                    totalCash += player.cash || 0;
+                    totalLands += player.lands ? Object.keys(player.lands).length : 0;
+                    if (!player.lands || Object.keys(player.lands).length === 0) allLandsOwned = false;
+
+                    // Check if any player has reached RM 40,000
+                    if (player.cash >= 40000) {
+                        triggerGlobalAlert("VICTORY", `${p.key} has won by reaching RM 40,000!`, "emoji_events");
+                        logEvent(`🏆 GAME OVER: ${p.key} achieved cash victory.`);
+                        return;
+                    }
+                });
+
+                if (aliveCount === 1) {
+                    triggerGlobalAlert("GAME OVER", `${myName} is the last player standing!`, "emoji_events");
+                    logEvent("🏆 GAME OVER: Last player standing.");
+                } else if (allLandsOwned) {
+                    triggerGlobalAlert("VICTORY", `${myName} has won by acquiring all lands!`, "emoji_events");
+                    logEvent("🏆 GAME OVER: Land ownership victory.");
+                }
+            });
+        }
+
+        function logEvent(m) { db.ref(`games/${roomCode}/log`).push(m); }
+        function confirmExit() { if(confirm("Exit game?")) window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>

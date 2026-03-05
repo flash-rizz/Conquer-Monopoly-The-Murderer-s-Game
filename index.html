@@ -3,91 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Conquer Monopoly</title>
-    
+    <title>Conquer - Lobby</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 
-                        sans: ['Inter', 'sans-serif'],
-                        wizard: ['Cinzel', 'serif'] 
-                    },
-                    colors: {
-                        app: { bg: '#0a0a0a', card: '#161616', accent: '#8b5cf6', danger: '#ef4444', success: '#10b981', text: '#e5e5e5', muted: '#a3a3a3' }
-                    },
-                    animation: {
-                        'pop-in': 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
-                        'slide-up': 'slideUp 0.3s ease-out forwards'
-                    },
-                    keyframes: {
-                        popIn: { '0%': { opacity: '0', transform: 'scale(0.5)' }, '100%': { opacity: '1', transform: 'scale(1)' } },
-                        slideUp: { '0%': { transform: 'translateY(100%)' }, '100%': { transform: 'translateY(0)' } }
-                    }
-                }
-            }
-        }
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'], wizard: ['Cinzel', 'serif'] }, colors: { app: { bg: '#0a0a0a', card: '#161616', accent: '#8b5cf6', muted: '#a3a3a3' } } } } }
     </script>
-    <style>
-        body::-webkit-scrollbar { display: none; }
-        .blur-secret { filter: blur(12px); opacity: 0; user-select: none; }
-        .tap-highlight-transparent { -webkit-tap-highlight-color: transparent; }
-        .wizard-border { border: 1px solid #d4af37; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-    </style>
 </head>
-<body class="bg-app-bg text-app-text min-h-screen font-sans antialiased pb-24 overflow-x-hidden">
+<body class="bg-app-bg text-gray-200 min-h-screen font-sans antialiased pb-24 flex flex-col p-4">
 
-    <audio id="snd-cash" src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=success-1-6297.mp3" preload="auto"></audio>
-    <audio id="snd-alert" src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=notification-sound-7062.mp3" preload="auto"></audio>
-
-    <div id="global-alert-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-6 bg-black/90 backdrop-blur-md">
-        <div class="bg-app-card border-2 border-app-accent w-full max-w-sm p-6 rounded-3xl shadow-2xl text-center animate-pop-in">
-            <div id="alert-icon-box" class="w-20 h-20 bg-app-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span id="alert-icon" class="material-icons-round text-5xl text-app-accent">campaign</span>
-            </div>
-            <h2 id="alert-title" class="text-2xl font-black uppercase italic mb-2 text-white tracking-wider font-wizard">ALERT</h2>
-            <div id="alert-msg" class="text-lg font-medium text-gray-300 mb-6 leading-relaxed whitespace-pre-wrap">Something happened.</div>
-            <button onclick="closeGlobalAlert()" class="w-full bg-white text-black font-bold py-3 rounded-xl hover:scale-105 transition-transform">OK</button>
-        </div>
-    </div>
-
-    <div id="modal-player-select" class="fixed inset-0 z-[130] hidden items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm">
-        <div class="bg-[#18181b] w-full max-w-sm rounded-t-3xl sm:rounded-3xl p-6 border-t sm:border border-white/10 shadow-2xl animate-slide-up">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="player-select-title" class="text-xl font-bold text-white font-wizard">Select Player</h3>
-                <button onclick="closePlayerSelect()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
-            </div>
-            <div id="player-list-container" class="space-y-3 max-h-[60vh] overflow-y-auto"></div>
-        </div>
-    </div>
-
-    <div id="modal-hint-phase" class="fixed inset-0 z-[110] hidden items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
-        <div class="bg-app-card w-full max-w-sm p-6 rounded-3xl border border-white/10 shadow-2xl text-center relative">
-            <div class="mb-4"><span class="material-icons-round text-4xl text-app-accent animate-spin-slow">security</span></div>
-            <h2 id="hint-phase-title" class="text-xl font-black text-white mb-2 uppercase font-wizard">Security Check</h2>
-            <p id="hint-phase-desc" class="text-sm text-gray-400 mb-6">Complete this task to verify connection.</p>
-            <div id="hint-content-area" class="space-y-4"></div>
-        </div>
-    </div>
-
-    <main id="app-container" class="max-w-md mx-auto min-h-screen relative flex flex-col p-4">
-
-        <div id="view-home" class="flex flex-col flex-1 justify-center items-center space-y-8 animate-fade-in">
+    <main id="app-container" class="max-w-md mx-auto min-h-screen w-full relative flex flex-col">
+        <div id="view-home" class="flex flex-col flex-1 justify-center items-center space-y-8">
             <div class="text-center space-y-2">
                 <div class="w-24 h-24 bg-gradient-to-br from-purple-900 to-black rounded-full mx-auto flex items-center justify-center border-2 border-purple-500/50 shadow-[0_0_30px_rgba(139,92,246,0.3)] mb-6">
                     <span class="material-icons-round text-6xl text-purple-400">castle</span>
                 </div>
                 <h1 class="text-4xl font-bold tracking-tight font-wizard text-white">Conquer</h1>
-                <p class="text-app-muted text-xs uppercase tracking-[0.3em] font-medium text-purple-300">Murder Mystery Monopoly</p>
+                <p class="text-app-muted text-xs uppercase tracking-[0.3em] font-medium text-purple-300">Select Path</p>
             </div>
             <div class="w-full space-y-3">
-                <button onclick="switchView('view-create')" class="w-full bg-app-accent hover:bg-purple-600 py-4 rounded-xl font-bold text-lg shadow-lg font-wizard tracking-wide text-black">Create New Game</button>
+                <button onclick="switchView('view-create')" class="w-full bg-app-accent hover:bg-purple-600 py-4 rounded-xl font-bold text-lg shadow-lg font-wizard text-black">Create New Game</button>
                 <button onclick="switchView('view-join')" class="w-full bg-app-card border border-white/10 hover:bg-white/5 py-4 rounded-xl font-semibold text-lg text-app-muted hover:text-white font-wizard">Join Game</button>
             </div>
         </div>
@@ -99,11 +37,9 @@
                 <div class="w-8"></div>
             </div>
             <div class="space-y-4">
-                <div class="bg-app-card rounded-2xl overflow-hidden border border-white/5 p-4 space-y-4">
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-medium text-app-muted">Room Code</span>
-                        <input id="create-room" type="text" placeholder="ROOM1" class="bg-transparent text-right outline-none text-app-accent w-1/2 uppercase font-bold tracking-wider">
-                    </div>
+                <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex justify-between items-center">
+                    <span class="text-sm font-medium text-app-muted">Room Code</span>
+                    <input id="create-room" type="text" placeholder="ROOM1" class="bg-transparent text-right outline-none text-app-accent w-1/2 uppercase font-bold tracking-wider">
                 </div>
                 <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex items-center justify-between">
                     <span class="font-medium">Total Players</span>
@@ -112,6 +48,13 @@
                         <span id="player-count-display" class="font-bold w-4 text-center">4</span>
                         <button onclick="adjustCount(1)" class="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded text-purple-400">+</button>
                     </div>
+                </div>
+                <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex items-center justify-between">
+                    <span class="font-medium">Game Mode</span>
+                    <select id="create-mode" class="bg-app-bg text-white border border-white/10 rounded-lg p-2 outline-none font-bold text-sm text-right">
+                        <option value="mystery">Murder Mystery</option>
+                        <option value="classic">Classic Monopoly</option>
+                    </select>
                 </div>
             </div>
             <button onclick="handleCreateGame()" class="mt-auto w-full bg-app-accent py-4 rounded-xl font-bold text-lg shadow-lg text-black font-wizard">Create & Join</button>
@@ -135,774 +78,81 @@
             </div>
             <button onclick="handleJoinGame()" class="mt-auto w-full bg-white text-black py-4 rounded-xl font-bold text-lg shadow-lg font-wizard">Enter Game</button>
         </div>
-
-        <div id="view-game" class="hidden flex-col flex-1 pt-2 relative">
-            
-            <div id="eliminated-overlay" class="fixed inset-0 z-[200] bg-black/95 hidden flex-col items-center justify-center backdrop-blur-md text-center p-6">
-                <span class="material-icons-round text-8xl text-red-600 mb-6 animate-pulse">sentiment_very_dissatisfied</span>
-                <h2 class="text-4xl font-black text-red-500 uppercase font-wizard mb-4 tracking-widest">Eliminated</h2>
-                <p class="text-gray-400 text-xl font-wizard mb-8">You have been killed.</p>
-                <button id="btn-revive" onclick="performRevive()" class="hidden bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center gap-2">
-                    <span class="material-icons-round">favorite</span> USE PHOENIX POTION
-                </button>
-            </div>
-
-            <div class="flex justify-between items-center mb-6">
-                <button onclick="confirmExit()" class="p-2 -ml-2 rounded-full hover:bg-white/10 text-white flex items-center gap-1">
-                    <span class="material-icons-round">arrow_back</span> <span class="text-xs font-bold uppercase">Exit</span>
-                </button>
-                <div class="flex gap-2">
-                     <div class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-purple-300 border border-purple-500/30">
-                         Room: <span id="display-room-code" class="text-white">...</span> 
-                         <span class="mx-1 text-white/20">|</span>
-                         <button onclick="incrementRound()" class="text-app-accent hover:text-white transition-colors">Round: <span id="display-round-count" class="text-white font-bold">1</span></button>
-                     </div>
-                    <div id="display-cash-badge" class="bg-app-bg px-3 py-1 rounded-full text-xs font-medium text-app-success border border-green-500/30">RM 0</div>
-                </div>
-            </div>
-
-            <div class="text-center mb-6 relative group cursor-pointer tap-highlight-transparent" onclick="toggleRole()">
-                <div class="bg-app-card border border-white/10 rounded-3xl p-6 relative overflow-hidden shadow-2xl active:scale-95 transition-transform">
-                    <div id="secret-layer" class="transition-all duration-500 blur-secret">
-                        <div class="w-24 h-24 bg-[#0a0a0a] rounded-2xl mx-auto mb-4 flex items-center justify-center border-2 border-purple-500/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]">
-                            <span id="role-icon" class="material-icons-round text-6xl text-white">person</span> 
-                        </div>
-                        <h3 id="role-name" class="text-3xl font-bold text-white mb-2 font-wizard">Muggle</h3>
-                        <div class="flex justify-center gap-3 mt-4">
-                            <div class="bg-white/5 px-3 py-1 rounded-lg border border-white/5">
-                                <span class="block text-[10px] text-app-muted uppercase tracking-wider mb-1">Status</span>
-                                <span id="role-status" class="text-sm font-bold text-white">Alive</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="reveal-text" class="absolute inset-0 flex items-center justify-center flex-col z-10 pointer-events-none transition-opacity duration-300">
-                        <span class="material-icons-round text-4xl text-white/50 mb-2">visibility_off</span>
-                        <span class="text-xs font-bold tracking-[0.2em] uppercase text-white/50 font-wizard">Tap to Reveal</span>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="openInventory()" class="w-full mb-4 bg-app-card border border-white/10 p-4 rounded-xl flex items-center justify-between hover:bg-white/5 active:scale-95 transition-all group">
-                <div class="flex items-center gap-3">
-                    <div class="bg-purple-900/30 p-2 rounded-lg text-purple-400 border border-purple-500/20"><span class="material-icons-round">auto_stories</span></div>
-                    <div class="text-left"><span class="block font-bold text-sm text-white font-wizard">Grimoire</span><span class="block text-xs text-app-muted">Assets & Powers</span></div>
-                </div>
-                <span class="material-icons-round text-app-muted group-hover:translate-x-1 transition-transform">chevron_right</span>
-            </button>
-
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="openPlayerSelect(performPay, 'Select Player to Pay')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-app-success">payments</span><span class="text-xs font-bold">Pay</span>
-                </button>
-                <button onclick="performAction('bank')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-app-danger">account_balance</span><span class="text-xs font-bold">Bank</span>
-                </button>
-                <button onclick="performAction('chest')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-blue-400">inventory_2</span><span class="text-xs font-bold">Chest</span>
-                </button>
-                <button onclick="performAction('power')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-amber-500">bolt</span><span class="text-xs font-bold">Power</span>
-                </button>
-                <button onclick="performAction('land')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-purple-400">flag</span><span class="text-xs font-bold">Claim</span>
-                </button>
-                <button onclick="initiateHintPhase()" class="bg-app-card p-4 rounded-xl border border-red-500/30 active:bg-red-500/20 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-red-500">lightbulb</span><span class="text-xs font-bold text-red-500">Hint</span>
-                </button>
-                
-                <button onclick="performAction('challenge')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-orange-500">sports_kabaddi</span><span class="text-xs font-bold">Challenge</span>
-                </button>
-                <button onclick="performAction('compete')" class="bg-app-card p-4 rounded-xl border border-white/5 active:bg-white/5 flex flex-col items-center gap-2">
-                    <span class="material-icons-round text-blue-500">casino</span><span class="text-xs font-bold">Compete</span>
-                </button>
-            </div>
-
-            <div class="bg-app-card rounded-2xl p-4 border border-white/5 flex-1 min-h-[150px] flex flex-col">
-                <div class="flex items-center gap-2 mb-3 opacity-50"><span class="material-icons-round text-sm">history</span><span class="text-xs font-bold uppercase tracking-wide">Log</span></div>
-                <div id="game-feed-list" class="space-y-3 overflow-y-auto text-xs flex-1"></div>
-            </div>
-        </div>
     </main>
 
-    <div id="modal-inventory" class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-sm hidden flex-col justify-end">
-        <div class="bg-[#121212] rounded-t-3xl p-6 h-[85vh] flex flex-col border-t border-purple-500/30 shadow-[0_-10px_40px_rgba(139,92,246,0.1)] animate-slide-up">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-white font-wizard">Grimoire</h2>
-                <button onclick="closeInventory()" class="p-2 bg-white/5 rounded-full"><span class="material-icons-round text-white">close</span></button>
-            </div>
-            
-            <div class="mb-6">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-amber-500 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">bolt</span> Spells (Power Cards)</h3>
-                <div id="inventory-powers" class="grid grid-cols-2 gap-3 overflow-y-auto max-h-40"></div>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto border-t border-white/10 pt-4 mb-4">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-3 flex items-center gap-2"><span class="material-icons-round text-sm">map</span> Domains (Lands)</h3>
-                <div id="inventory-lands" class="space-y-4 pb-10"></div>
-            </div>
-
-            <div id="inventory-action-area" class="mt-auto pt-4 border-t border-white/10">
-                <button id="btn-kill-inventory" onclick="openPlayerSelect(performKill, 'Select Victim')" class="w-full bg-red-900/80 hover:bg-red-800 border border-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.4)] hidden flex items-center justify-center gap-3">
-                    <span class="material-icons-round">skull</span> KILL PLAYER
-                </button>
-                <button id="btn-accuse-inventory" onclick="performAccusation()" class="w-full bg-red-900/20 border border-red-500/30 p-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-900/40 hidden">
-                    <span class="material-icons-round text-red-500">gavel</span> <span class="font-bold text-red-500 font-wizard">ACCUSE WITCH</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
+        // FIREBASE SETUP
         const firebaseConfig = { apiKey: "AIzaSyDUPm6XOTP2iQQmwC-QSQi9PDTa6ddd4uo", authDomain: "conquer-ff3a6.firebaseapp.com", databaseURL: "https://conquer-ff3a6-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "conquer-ff3a6", storageBucket: "conquer-ff3a6.firebasestorage.app", messagingSenderId: "172263193906", appId: "1:172263193906:web:f2c43b9b02cb421e0feb2b", measurementId: "G-D1GZTSP2SM" };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let myName = "", roomCode = "", myRole = "Muggle", myCash = 15000, setupPlayerCount = 4, playerSelectCallback = null;
-        let revivalCardKey = null; 
-        let currentRound = 1;
-        const KILL_ROUNDS = [10, 16, 21, 25];
-
-        // --- UPDATED LAND DATA ---
-        const LAND_DATA = [
-            { id: 1, name: "Ancient Stone", price: 2800, rent: 280, house: 1400 },
-            { id: 2, name: "Mine Entrance", price: 2000, rent: 200, house: 1000 },
-            { id: 3, name: "Royal Palace Gates", price: 4000, rent: 400, house: 2000 },
-            { id: 4, name: "Blue Fairy Kingdom", price: 3000, rent: 300, house: 1500 },
-            { id: 5, name: "Celestial Sky Fortress", price: 3500, rent: 350, house: 1750 },
-            { id: 6, name: "The Lost Temple", price: 2600, rent: 260, house: 1300 },
-            { id: 7, name: "Sky Kingdom", price: 3500, rent: 350, house: 1750 },
-            { id: 8, name: "Enchanted Forest", price: 3000, rent: 300, house: 1500 },
-            { id: 9, name: "Goblin Territory", price: 1800, rent: 180, house: 900 },
-            { id: 10, name: "Jungle Temple", price: 2600, rent: 260, house: 1300 },
-            { id: 11, name: "Glacial Barrens", price: 2500, rent: 250, house: 1250 },
-            { id: 12, name: "Halfling Village", price: 1600, rent: 160, house: 800 },
-            { id: 13, name: "Goblin Market", price: 2000, rent: 200, house: 1000 },
-            { id: 14, name: "Secluded Grove", price: 3000, rent: 300, house: 1500 },
-            { id: 15, name: "Crystalline Keep", price: 1200, rent: 120, house: 600 },
-            { id: 16, name: "Floating Lava Island", price: 1000, rent: 100, house: 500 },
-            { id: 17, name: "Oasis", price: 1000, rent: 100, house: 500 },
-            { id: 18, name: "Frostbite Valley", price: 1400, rent: 140, house: 700 },
-            { id: 19, name: "Volcanic Wasteland", price: 600, rent: 60, house: 300 },
-            { id: 20, name: "Ancient Library", price: 1500, rent: 150, house: 750 },
-            { id: 21, name: "Blacksmith", price: 1800, rent: 180, house: 900 },
-            { id: 22, name: "Caribbean", price: 2400, rent: 240, house: 1200 },
-            { id: 23, name: "Bustling Harbor", price: 2200, rent: 220, house: 1100 },
-            { id: 24, name: "Atlantis", price: 2000, rent: 200, house: 1000 },
-            { id: 25, name: "Sky Harbor", price: 2000, rent: 200, house: 1000 },
-            { id: 26, name: "The Kraken", price: 1500, rent: 150, house: 750 },
-            { id: 27, name: "Treacherous Mountain", price: 2000, rent: 200, house: 1000 },
-            { id: 28, name: "Enchanted Lake", price: 2300, rent: 230, house: 1150 }
-        ];
-
-        // --- DATA LISTS (WITH DUAL LANGUAGE) ---
-
-        const CHEST_CARDS = [
-            { en: "Inheritance: Receive RM 3,000", bm: "Warisan: Terima RM 3,000", type: "money" },
-            { en: "Tax: Pay RM 2,000", bm: "Cukai: Bayar RM 2,000", type: "money" },
-            { en: "Re-Zone: Change your land with anyone of same value", bm: "Zon Semula: Tukar tanah anda dengan sesiapa yang sama nilai", type: "info" },
-            { en: "Found Mana Crystal: Sell it to the bank. Receive RM 2,500", bm: "Jumpa Kristal Mana: Jual kepada bank. Terima RM 2,500", type: "money" },
-            { en: "Grand Ball: You host a party. Each player pays you RM 500", bm: "Majlis Tari-Menari: Anda anjur parti. Setiap pemain bayar RM 500", type: "money" },
-            { en: "Rent Money: Force 1 player to pay any of your property rent", bm: "Duit Sewa: Paksa 1 pemain bayar sewa hartanah anda", type: "info" },
-            { en: "Portal Error: Move your token Back 3 Spaces", bm: "Ralat Portal: Gerakkan token anda Undur 3 Tapak", type: "info" },
-            { en: "Speed Potion: Advance immediately to GO (Collect Salary)", bm: "Posyen Kelajuan: Maju terus ke GO (Ambil Gaji)", type: "info" },
-            { en: "Goblin Raid: Thieves stole your wallet! Lose RM 1,000", bm: "Serangan Goblin: Pencuri curi dompet anda! Rugi RM 1,000", type: "money" },
-            { en: "Lucky Charm: Get a power card", bm: "Tangkal Bertuah: Dapat kad kuasa", type: "drawPower" },
-            { en: "Property Tax: Pay RM 200 per land you own", bm: "Cukai Harta: Bayar RM 200 setiap tanah anda", type: "money" },
-            { en: "Market Boom: All your lands generate Double Rent for the next round", bm: "Pasaran Melonjak: Semua tanah anda jana Sewa Ganda untuk pusingan depan", type: "info" },
-            { en: "Haunted: You cannot move next turn (Skip Turn)", bm: "Berhantu: Anda tidak boleh gerak pusingan depan (Langkau)", type: "info" },
-            { en: "Land Grant: Advance to the nearest Empty Land. If unowned, you get it for free!", bm: "Geran Tanah: Maju ke Tanah Kosong terdekat. Jika tiada tuan, dapat percuma!", type: "info" },
-            { en: "Cursed Mirror: You may swap cash balances with the player based on the dice.", bm: "Cermin Sumpahan: Anda boleh tukar baki tunai dengan pemain berdasarkan dadu.", type: "info" },
-            { en: "Invisibility: You are immune to Rent and Stealing for 1 round.", bm: "Halimunan: Anda kebal dari Sewa dan Curi untuk 1 pusingan.", type: "info" },
-            { en: "Dark Lottery: Roll a die. If 1-3, lose RM 1,000. If 4-6, gain RM 2,000.", bm: "Loteri Gelap: Baling dadu. 1-3 rugi RM 1,000. 4-6 untung RM 2,000.", type: "info" },
-            { en: "Magic Show: You perform street magic. Every player gives you RM 200.", bm: "Pertunjukan Silap Mata: Anda buat persembahan. Setiap pemain beri RM 200.", type: "money" },
-            { en: "Sudden Storm: All players must move Back 2 Spaces. But nothing will happen.", bm: "Ribut Tiba-tiba: Semua pemain mesti undur 2 Tapak. Tetapi tiada apa berlaku.", type: "info" },
-            { en: "Open Portal: Advance to any place with the theme of forest", bm: "Buka Portal: Maju ke mana-mana tempat tema hutan", type: "info" },
-            { en: "Renovation: Pay RM 500 per House you own.", bm: "Ubah Suai: Bayar RM 500 setiap Rumah anda.", type: "money" },
-            { en: "Get Hint: You may ask for a hint.", bm: "Dapatkan Petunjuk: Anda boleh minta satu petunjuk.", type: "info" }
-        ];
-
-        const POWER_CARDS = [
-            { en: "Double Move: Move again immediately.", bm: "Gerak Ganda: Gerak lagi serta-merta." },
-            { en: "Just Say No: Stop any action in that current time.", bm: "Katakan Tidak: Hentikan sebarang aksi pada masa itu." },
-            { en: "Stop Move: Freeze a player for 1 turn.", bm: "Henti Gerak: Bekukan pemain untuk 1 pusingan." },
-            { en: "Steal 1k: Steal RM 1,500 from another player.", bm: "Curi 1k: Curi RM 1,500 dari pemain lain." },
-            { en: "Block Rent: Avoid paying rent once.", bm: "Sekat Sewa: Elak bayar sewa sekali." },
-            { en: "Phoenix Potion: Auto-revive if killed.", bm: "Posyen Phoenix: Hidup semula jika dibunuh." },
-            { en: "Bribe the Guard: Keep this card. Use it to get out of Underground city.", bm: "Rasuah Pengawal: Simpan kad ini. Guna untuk keluar dari Bandar Bawah Tanah." },
-            { en: "Teleport: Move your token to any space on the board instantly.", bm: "Teleportasi: Gerakkan token ke mana-mana ruang papan serta-merta." },
-            { en: "Invisibility: You are immune to Rent once.", bm: "Halimunan: Kebal dari Sewa sekali." },
-            { en: "Mirror Spell: Reflect a \"Steal\" or \"Dark Power\" back at the caster.", bm: "Mantera Cermin: Pantulkan \"Curi\" atau \"Kuasa Gelap\" kembali kepada penyihir." },
-            { en: "Earthquake: Choose a land. Demolish 1 House/Hotel from it.", bm: "Gempa Bumi: Pilih tanah. Robohkan 1 Rumah/Hotel darinya." },
-            { en: "Time Freeze: Skip the next player's turn.", bm: "Beku Masa: Langkau giliran pemain seterusnya." },
-            { en: "Summon: Force a player to swap with your current space.", bm: "Seru: Paksa pemain bertukar dengan tempat anda sekarang." },
-            { en: "Shield Charm: Make yourself immune from getting killed for 1 night (Use once in the 8th round)", bm: "Mantera Perisai: Kebal dari dibunuh untuk 1 malam (Guna sekali pada pusingan ke-8)." },
-            { en: "Debuff: Force everyone to drop 1 of their Power Card", bm: "Nyah-Kuasa: Paksa semua orang buang 1 Kad Kuasa mereka." },
-            { en: "Sabotage: Used on player who about to obtain land to stop them", bm: "Sabotaj: Guna pada pemain yang hampir dapat tanah untuk hentikan mereka." },
-            { en: "Dice Hack: Change your dice roll result to a 6 manually.", bm: "Godam Dadu: Tukar hasil balingan dadu anda kepada 6 secara manual." },
-            { en: "Pickpocket: Steal RM 500 from the player sitting to your left.", bm: "Seluk Saku: Curi RM 500 dari pemain di kiri anda." },
-            { en: "Flash Sale: Buy an unowned property for 50% OFF the list price.", bm: "Jualan Kilat: Beli hartanah tanpa tuan dengan DISKAUN 50%." },
-            { en: "Voodoo Link: Select a player. For the next round, any money you pay, they must pay too.", bm: "Pautan Voodoo: Pilih pemain. Untuk pusingan seterusnya, apa sahaja anda bayar, mereka juga bayar." }
-        ];
-        
-        const WITCH_CARDS = [
-            { en: "Block House: Prevent a player from building/upgrading.", bm: "Sekat Rumah: Halang pemain dari bina/naik taraf." }
-        ];
-
-        const CHALLENGES = [
-            { en: "Win Rock Paper Scissors, Select one player", bm: "Menang 'Batu Gunting Kertas', Pilih seorang pemain" },
-            { en: "Name 5 countries in 10s", bm: "Namakan 5 negara dalam 10s" },
-            { en: "Flip a Coin - Heads Win", bm: "Lambung Syiling - Kepala Menang" },
-            { en: "Dice Duel (Highest Roll Wins)", bm: "Duel Dadu (Nombor Tertinggi Menang)" },
-            { en: "Coin Flip Duel", bm: "Duel Lambung Syiling" },
-            { en: "Prediction: Guess if your next roll is Odd or Even", bm: "Ramalan: Teka balingan seterusnya Ganjil atau Genap" },
-            { en: "Coin Flip Duel: Both flip a coin. Matching = Challenger wins. Different = Defender wins.", bm: "Duel Syiling: Kedua lambung. Sama = Pencabar Menang. Beza = Pertahan Menang." },
-            { en: "Guess the Number: A player write 1-100. Closest guess wins.", bm: "Teka Nombor: Tulis 1-100. Paling dekat menang." },
-            { en: "Word Chain: Pick a category (e.g., \"Animals\"). Go back and forth naming them. First to repeat or hesitate loses.", bm: "Rantai Kata: Pilih kategori. Jangan ragu-ragu." },
-            { en: "Odd/Even: Both hide one hand back, holding 1 or 2 fingers. On \"Go\", reveal. If sum is Odd, Player A wins. Even, Player B wins.", bm: "Ganjil/Genap: Permainan tambah jari." },
-            { en: "Last Letter: Pick A category, say a word (e.g., \"Dog\"). Opponent must say a word starting with the last letter (\"Giraffe\"). First to fail loses.", bm: "Huruf Akhir: Perkataan bermula dengan huruf akhir lawan." },
-            { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
-            { en: "jenga, roll dice and pick 1 based on the number" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "Blackjack: Roll dice one at a time. Get closest to 21 without going over.", bm: "Blackjack: Baling dadu paling dekat 21." },
-            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah Genap=A, Ganjil=B." },
-            { en: "Batu seremban, Batu 2" }
-        ];
-
-        const COMPETES = [
-            { en: "Dice Duel (Highest Roll Wins)", bm: "Duel Dadu (Nombor Tertinggi Menang)" },
-            { en: "Rock Paper Scissors", bm: "Batu Gunting Kertas" },
-            { en: "Coin Flip Duel: Both flip a coin. Matching = Challenger wins. Different = Defender wins.", bm: "Duel Syiling: Sama = Pencabar Menang. Beza = Pertahan Menang." },
-            { en: "Guess the Number: Game Master writes 1-100. Closest guess wins.", bm: "Teka Nombor: GM tulis 1-100. Paling dekat menang." },
-            { en: "Word Chain: Pick a category (e.g., \"Animals\"). Go back and forth naming them. First to repeat or hesitate loses.", bm: "Rantai Kata: Pilih kategori. Bergilir-gilir." },
-            { en: "Odd/Even: Both hide one hand behind back, holding 1 or 2 fingers. On \"Go\", reveal. If sum is Odd, Player A wins. Even, Player B wins.", bm: "Ganjil/Genap: Permainan tambah jari." },
-            { en: "Last Letter: Pick A category, say a word (e.g., \"Dog\"). Opponent must say a word starting with the last letter (\"Giraffe\"). First to fail loses.", bm: "Huruf Akhir: Mula dengan huruf akhir perkataan lawan." },
-            { en: "Heads or Tails: Guess a coin flip correctly 2 times in a row.", bm: "Kepala/Ekor: Teka betul 2x berturut-turut." },
-            { en: "Blackjack: Roll dice one at a time. Get closest to 15 without going over.", bm: "Blackjack: Paling dekat 15 tanpa lebih." },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "" },
-            { en: "The 1-2-3 Game: On \"Shoot\", hold up 1 to 5 fingers. If the sum is even, Player A wins. Odd, Player B wins.", bm: "Permainan 1-2-3: Tambah jari. Genap=A, Ganjil=B." },
-            { en: "Bombaboom: Play \"Bombaboom\".", bm: "Bombaboom: Main \"Bombaboom\"." }
-        ];
-
-        const HINT_QUESTIONS = [
-            { en: "Is your current cash balance Odd or Even?", bm: "Adakah baki tunai anda Ganjil atau Genap?" },
-            { en: "Do you currently own more than 3 properties?", bm: "Adakah anda miliki lebih dari 3 hartanah?" },
-            { en: "Do you currently own more than 5 properties?", bm: "Adakah anda miliki lebih dari 5 hartanah?" },
-            { en: "Have you been to Underground city in this game?", bm: "Pernahkah anda ke Bandar Bawah Tanah?" },
-            { en: "Do you own any property in the First Row?", bm: "Adakah anda miliki tanah di Baris Pertama?" },
-            { en: "Do you own any property in the Second Row?", bm: "Adakah anda miliki tanah di Baris Kedua?" },
-            { en: "Do you own any property in the Third Row?", bm: "Adakah anda miliki tanah di Baris Ketiga?" },
-            { en: "Do you own any property in the 4th Row?", bm: "Adakah anda miliki tanah di Baris Ke-4?" },
-            { en: "Do you have a Power Card in your inventory right now?", bm: "Adakah anda ada Kad Kuasa sekarang?" },
-            { en: "Is the first letter of your Name in the first half of the alphabet (A-M)?", bm: "Adakah huruf pertama Nama anda di separuh awal abjad (A-M)?" },
-            { en: "Have you ever stolen a land from another player?", bm: "Pernahkah anda curi tanah pemain lain?" },
-            { en: "Do you own a any property with the theme SEA?", bm: "Adakah anda miliki tanah tema LAUT?" },
-            { en: "Do you own a any property with the theme FOREST?", bm: "Adakah anda miliki tanah tema HUTAN?" },
-            { en: "Do you own a any property with the theme GOBLIN?", bm: "Adakah anda miliki tanah tema GOBLIN?" },
-            { en: "Do you own a any property with the theme Castle?", bm: "Adakah anda miliki tanah tema ISTANA?" },
-            { en: "Do you own a any property with the theme SKY?", bm: "Adakah anda miliki tanah tema LANGIT?" },
-            { en: "Are you holding more than 2 Power Cards?", bm: "Adakah anda pegang lebih dari 2 Kad Kuasa?" },
-            { en: "Is your age an Even number?", bm: "Adakah umur anda nombor Genap?" },
-            { en: "Have you successfully stolen a land from anyone yet?", bm: "Sudahkah anda berjaya mencuri tanah?" },
-            { en: "Have you paid Rent to another player in the last 2 rounds?", bm: "Pernahkah anda bayar Sewa 2 pusingan lepas?" },
-            { en: "Do you own either 'The Kraken' or 'Ancient Library'?", bm: "Adakah anda miliki 'The Kraken' atau 'Ancient Library'?" },
-            { en: "Is your cash balance currently higher than RM 20,000?", bm: "Adakah tunai anda lebih RM 20,000?" },
-            { en: "Is your cash balance currently higher than RM 15,000?", bm: "Adakah tunai anda lebih RM 15,000?" },
-            { en: "Is your cash balance currently higher than RM 10,000?", bm: "Adakah tunai anda lebih RM 10,000?" },
-            { en: "Have you successfully stolen more than 2 land from anyone yet?", bm: "Sudahkah anda curi lebih dari 2 tanah?" },
-            { en: "Have you not stolen a land from anyone yet?", bm: "Adakah anda belum pernah curi tanah?" },
-            { en: "Have you use any power card?", bm: "Pernahkah anda guna kad kuasa?" },
-            { en: "Do you own any house?", bm: "Adakah anda miliki rumah?" },
-            { en: "Did you Lose any of your property to the player?", bm: "Adakah anda Kehilangan tanah kepada pemain lain?" },
-            { en: "Have you traded property with another player in this game?", bm: "Pernahkah anda bertukar hartanah dengan pemain lain dalam permainan ini?" },
-            { en: "Have you bought a House in the last 3 rounds?", bm: "Adakah anda membeli Rumah dalam 3 pusingan terakhir?" },
-            { en: "Is your player name longer than 5 letters?", bm: "Adakah nama pemain anda lebih panjang daripada 5 huruf?" },
-            { en: "Have you paid a fine or tax to the Bank in the last 2 rounds?", bm: "Adakah anda membayar denda atau cukai kepada Bank dalam 2 pusingan terakhir?" },
-            { en: "Do you currently own the most expensive property on the board (Royal Palace Gates)?", bm: "Adakah anda kini memiliki hartanah termahal di papan (Pintu Istana Diraja)?" },
-            { en: "Have you used a Power Card to steal money from another player?", bm: "Adakah anda menggunakan Kad Kuasa untuk mencuri wang daripada pemain lain?" }
-        ];
-
-        // --- APP LOGIC ---
-
-        function triggerGlobalAlert(t, m, i="info") { db.ref(`games/${roomCode}/globalAlert`).set({ title: t, message: m, icon: i, timestamp: Date.now() }); }
-        function listenForGlobalAlerts() {
-            db.ref(`games/${roomCode}/globalAlert`).on('value', snap => {
-                if(!snap.exists()) return;
-                const data = snap.val();
-                if (Date.now() - data.timestamp < 5000) {
-                    if(data.icon !== "payments") document.getElementById('snd-alert').play().catch(e=>{});
-                    showBigBox(data.title, data.message, data.icon);
-                }
-            });
-            db.ref(`games/${roomCode}/players/${myName}/notification`).on('value', snap => {
-                if(!snap.exists()) return;
-                const data = snap.val();
-                if (Date.now() - data.timestamp < 5000) {
-                    document.getElementById('snd-cash').play().catch(e => {});
-                    showBigBox("PAYMENT RECEIVED", data.message, "payments");
-                }
-            });
-            listenForHintPhase();
-            
-            // Round Count Listener
-            db.ref(`games/${roomCode}/round`).on('value', s => {
-                currentRound = s.val() || 1;
-                document.getElementById('display-round-count').innerText = currentRound;
-                if(myRole === "Witch") updateKillButtonVisibility();
-            });
-        }
-        function showBigBox(t, m, i) {
-            document.getElementById('alert-title').innerText = t; 
-            document.getElementById('alert-msg').innerText = m; 
-            document.getElementById('alert-icon').innerText = i;
-            document.getElementById('global-alert-modal').classList.remove('hidden'); document.getElementById('global-alert-modal').classList.add('flex');
-        }
-        function closeGlobalAlert() { document.getElementById('global-alert-modal').classList.add('hidden'); document.getElementById('global-alert-modal').classList.remove('flex'); }
+        let setupPlayerCount = 4;
 
         function switchView(id) {
-            ['view-home', 'view-create', 'view-join', 'view-game'].forEach(v => {
+            ['view-home', 'view-create', 'view-join'].forEach(v => {
                 document.getElementById(v).classList.add('hidden'); document.getElementById(v).classList.remove('flex');
             });
             document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex');
         }
-        function toggleRole() {
-            const l = document.getElementById('secret-layer'), t = document.getElementById('reveal-text');
-            l.classList.toggle('blur-secret'); 
-            t.classList.toggle('opacity-0');
-        }
-        function adjustCount(n) { setupPlayerCount = Math.max(3, Math.min(8, setupPlayerCount + n)); document.getElementById('player-count-display').innerText = setupPlayerCount; }
 
-        function updateKillButtonVisibility() {
-            const btn = document.getElementById('btn-kill-inventory');
-            if (myRole === "Witch" && KILL_ROUNDS.includes(currentRound)) {
-                btn.classList.remove('hidden');
-                btn.classList.add('flex');
-            } else {
-                btn.classList.add('hidden');
-                btn.classList.remove('flex');
-            }
-        }
-
-        function openInventory() {
-            document.getElementById('modal-inventory').classList.remove('hidden'); 
-            document.getElementById('modal-inventory').classList.add('flex');
-            
-            if(myRole === "Witch") {
-                updateKillButtonVisibility();
-                document.getElementById('btn-accuse-inventory').classList.add('hidden');
-            } else {
-                document.getElementById('btn-kill-inventory').classList.add('hidden');
-                document.getElementById('btn-accuse-inventory').classList.remove('hidden');
-            }
-
-            db.ref(`games/${roomCode}/players/${myName}/lands`).once('value', snap => {
-                const c = document.getElementById('inventory-lands'); c.innerHTML = '';
-                if(snap.exists()) {
-                    const lands = snap.val();
-                    Object.keys(lands).forEach(k => {
-                        const landId = parseInt(k);
-                        const landInfo = LAND_DATA.find(l => l.id === landId);
-                        
-                        if (landInfo) {
-                            c.innerHTML += `
-                            <div class="bg-[#1a1a1a] wizard-border rounded-lg overflow-hidden mb-4 relative group">
-                                <div class="h-4 bg-app-accent w-full border-b border-[#d4af37]"></div>
-                                <div class="p-4 text-center">
-                                    <div class="text-xs text-gray-500 font-bold mb-1">LAND #${landId}</div>
-                                    <h4 class="font-bold text-lg text-white mb-1"><span class="text-app-accent mr-2">#${landId}</span>${landInfo.name}</h4>
-                                    <div class="flex justify-around text-xs text-gray-400 mt-2 border-t border-white/10 pt-2">
-                                        <div><span class="block text-[#d4af37]">RENT</span>RM ${landInfo.rent}</div>
-                                        <div><span class="block text-[#d4af37]">1 HOUSE</span>RM ${landInfo.house}</div>
-                                    </div>
-                                </div>
-                            </div>`;
-                        } else {
-                            c.innerHTML += `<div class="bg-gray-800 p-2 rounded mb-2 text-white">Land #${k}</div>`;
-                        }
-                    });
-                } else c.innerHTML = '<div class="text-gray-500 text-center italic">No domains conquered yet.</div>';
-            });
-
-            db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
-                const c = document.getElementById('inventory-powers'); c.innerHTML = '';
-                if(snap.exists()) {
-                    const cards = snap.val();
-                    Object.keys(cards).forEach(k => {
-                        const cardData = cards[k];
-                        const enText = cardData.en || cardData;
-                        const bmText = cardData.bm || "";
-                        c.innerHTML += `<button onclick="usePowerCard('${k}')" class="bg-[#2a2a2a] border border-amber-500/30 p-3 rounded-xl text-center hover:bg-amber-900/20"><div class="text-amber-500 font-bold text-sm">${enText}</div><div class="text-[10px] text-gray-400 italic">${bmText}</div><div class="text-[10px] text-gray-500 uppercase mt-1">Tap to Cast</div></button>`;
-                    });
-                } else c.innerHTML = '<div class="col-span-2 text-gray-500 text-center italic">Grimoire empty.</div>';
-            });
-        }
-        function closeInventory() { document.getElementById('modal-inventory').classList.add('hidden'); document.getElementById('modal-inventory').classList.remove('flex'); }
-        
-        function usePowerCard(k) {
-            const cardRef = db.ref(`games/${roomCode}/players/${myName}/powerCards/${k}`);
-            cardRef.once('value', snap => {
-                if (!snap.exists()) return alert("Card no longer exists!");
-                const cardData = snap.val();
-                const n = cardData.en || cardData; 
-                
-                if(confirm(`Cast spell "${n}"?`)) {
-                    cardRef.remove();
-                    
-                    const isDark = (n.includes("Stop Move") || n.includes("Block House")) && myRole === "Witch";
-                    
-                    triggerGlobalAlert(isDark ? "DARK CURSE" : "SPELL CAST", isDark ? `THE WITCH cast a Dark Spell!` : `${myName} cast ${n}!`, "auto_fix_high");
-                    logEvent(isDark ? `😈 THE WITCH cast ${n}` : `⚡ ${myName} cast ${n}`);
-                    closeInventory();
-                }
-            });
+        function adjustCount(n) { 
+            setupPlayerCount = Math.max(3, Math.min(8, setupPlayerCount + n)); 
+            document.getElementById('player-count-display').innerText = setupPlayerCount; 
         }
 
         function handleCreateGame() {
             const r = document.getElementById('create-room').value.trim().toUpperCase();
-            if(!r) return alert("Enter Code");
+            const mode = document.getElementById('create-mode').value;
+            if(!r) return alert("Enter Room Code");
+            
             const ref = db.ref(`games/${r}`);
             ref.once('value', s => {
-                if(s.exists()) alert("Code Taken");
+                if(s.exists()) alert("Room Code Taken!");
                 else {
-                    const k = Math.floor(Math.random()*setupPlayerCount);
-                    ref.child('settings').set({ maxPlayers: setupPlayerCount, murdererSlot: k, currentCount: 0 });
+                    const k = Math.floor(Math.random() * setupPlayerCount);
+                    ref.child('settings').set({ maxPlayers: setupPlayerCount, murdererSlot: k, currentCount: 0, gameMode: mode });
                     switchView('view-join');
                     document.getElementById('join-room').value = r;
                 }
             });
         }
+
         function handleJoinGame() {
             const n = document.getElementById('join-name').value.trim().toUpperCase();
             const r = document.getElementById('join-room').value.trim().toUpperCase();
-            if(!n || !r) return alert("Fill all");
-            joinGameProcess(n,r);
-        }
-        function joinGameProcess(n,r) {
-            myName = n; roomCode = r;
+            if(!n || !r) return alert("Fill Name and Room");
+            
             const ref = db.ref(`games/${r}`);
-            const pRef = ref.child(`players/${n}`);
             ref.child('settings').once('value', s => {
-                if(!s.exists()) return alert("No Room");
+                if(!s.exists()) return alert("Room does not exist");
                 const set = s.val();
+                const mode = set.gameMode || 'mystery';
+                const pRef = ref.child(`players/${n}`);
+                
                 pRef.once('value', ps => {
-                    if(ps.exists()) setupGameUI(ps.val());
-                    else {
+                    if(ps.exists()) {
+                        // Rejoining
+                        window.location.href = `${mode}.html?room=${r}&name=${n}`;
+                    } else {
+                        // New Player
                         ref.child('settings').transaction(c => {
                             if(c.currentCount >= c.maxPlayers) return;
                             c.currentCount++; return c;
                         }, (e, comm, snap) => {
                             if(comm) {
-                                const role = ((snap.val().currentCount - 1) === set.murdererSlot) ? "Witch" : "Muggle";
-                                const d = { name: n, cash: 15000, role: role, status: "Alive" };
-                                pRef.set(d); setupGameUI(d);
-                            } else alert("Full");
+                                let role = "Conqueror";
+                                if(mode === "mystery") {
+                                    role = ((snap.val().currentCount - 1) === set.murdererSlot) ? "Witch" : "Muggle";
+                                }
+                                pRef.set({ name: n, cash: 15000, role: role, status: "Alive" }).then(() => {
+                                    window.location.href = `${mode}.html?room=${r}&name=${n}`;
+                                });
+                            } else alert("Room is Full");
                         });
                     }
                 });
             });
         }
-
-        function setupGameUI(d) {
-            myRole = d.role; myCash = d.cash;
-            document.getElementById('display-room-code').innerText = roomCode;
-            document.getElementById('display-cash-badge').innerText = `RM ${myCash}`;
-            
-            db.ref(`games/${roomCode}/players/${myName}/status`).on('value', s => {
-                if(s.val() === "Dead") {
-                    document.getElementById('eliminated-overlay').classList.remove('hidden');
-                    document.getElementById('eliminated-overlay').classList.add('flex');
-                    checkRevival();
-                } else {
-                    document.getElementById('eliminated-overlay').classList.add('hidden');
-                    document.getElementById('eliminated-overlay').classList.remove('flex');
-                }
-            });
-
-            const rn = document.getElementById('role-name'), ri = document.getElementById('role-icon'); 
-            if(myRole === "Witch") {
-                rn.innerText = "Witch"; rn.classList.add("text-app-danger"); ri.innerText = "history_edu"; ri.classList.replace("text-white","text-app-danger");
-            } else {
-                rn.innerText = "Muggle"; ri.innerText = "person"; 
-            }
-            listenForGlobalAlerts();
-            db.ref(`games/${roomCode}/players/${myName}/cash`).on('value', s => { myCash = s.val(); document.getElementById('display-cash-badge').innerText=`RM ${myCash}`; });
-            db.ref(`games/${roomCode}/log`).on('child_added', s => {
-                const d = document.createElement('div');
-                d.className = "flex gap-2 text-xs border-b border-white/5 pb-1 mb-1 text-gray-400";
-                d.innerHTML = `<span>${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span> <span class="text-white">${s.val()}</span>`;
-                document.getElementById('game-feed-list').prepend(d);
-            });
-            switchView('view-game');
-        }
-
-        function checkRevival() {
-            db.ref(`games/${roomCode}/players/${myName}/powerCards`).once('value', snap => {
-                const btn = document.getElementById('btn-revive');
-                revivalCardKey = null;
-                if(snap.exists()) {
-                    snap.forEach(c => {
-                        const val = c.val();
-                        if((val.en && val.en.includes("Phoenix Potion")) || (val === "Phoenix Potion")) revivalCardKey = c.key;
-                    });
-                }
-                if(revivalCardKey) btn.classList.remove('hidden');
-                else btn.classList.add('hidden');
-            });
-        }
-
-        function performRevive() {
-            if(revivalCardKey) {
-                db.ref(`games/${roomCode}/players/${myName}/powerCards/${revivalCardKey}`).remove();
-                db.ref(`games/${roomCode}/players/${myName}/status`).set("Alive");
-                triggerGlobalAlert("RESURRECTION", `${myName} used a PHOENIX POTION to return to life!`, "favorite");
-                logEvent(`💖 ${myName} revived!`);
-            }
-        }
-
-        function performAction(t) {
-            if(t === 'land') {
-                const n = parseInt(prompt("Enter Land # (1-32):"));
-                if(!n || n < 1 || n > 32) return alert("Invalid Land #");
-                
-                const land = LAND_DATA.find(l => l.id === n);
-                if(!land) return alert("Land not found!");
-
-                if(confirm(`Claim ${land.name}?\n\nPrice: RM ${land.price}\nRent: RM ${land.rent}\n1 House Rent: RM ${land.house}`)) {
-                    const ref = db.ref(`games/${roomCode}/ownership/${n}`);
-                    ref.once('value', s => {
-                        if(s.exists()) {
-                            const old = s.val();
-                            if(old === myName) return alert("You already own this!");
-                            db.ref(`games/${roomCode}/players/${old}/lands/${n}`).remove();
-                            db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            ref.set(myName);
-                            triggerGlobalAlert("DOMAIN SEIZED", `${myName} conquered ${land.name} from ${old}!`, "flag");
-                            logEvent(`⚔️ ${myName} seized ${land.name} (Value: RM ${land.price})`);
-                        } else {
-                            ref.set(myName);
-                            db.ref(`games/${roomCode}/players/${myName}/lands/${n}`).set(true);
-                            triggerGlobalAlert("NEW DOMAIN", `${myName} claimed ${land.name}!`, "flag");
-                            logEvent(`${myName} claimed ${land.name} (Value: RM ${land.price})`);
-                        }
-                    });
-                }
-            } else if(t === 'bank') {
-                const a = parseInt(prompt("Amount (- to pay, + to take):"));
-                if(a) { 
-                    db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash+a); 
-                    const action = a > 0 ? "took from" : "paid to";
-                    logEvent(`${myName} ${action} Bank RM ${Math.abs(a)}`); 
-                }
-            } else if(t === 'chest') {
-                const pick = CHEST_CARDS[Math.floor(Math.random()*CHEST_CARDS.length)];
-                alert(`${pick.en}\n\n${pick.bm}`);
-
-                // Manual Money Transactions for Chests (Only drawPower is automatic)
-                if(pick.type === "drawPower") performAction('power');
-
-                logEvent(`${myName} Chest: ${pick.en}`);
-
-            } else if(t === 'power') {
-                let pool = [...POWER_CARDS];
-                if(myRole==="Witch") pool = [...pool, ...WITCH_CARDS];
-                const pick = pool[Math.floor(Math.random()*pool.length)];
-                alert(`Spell: ${pick.en}\n\n${pick.bm}`);
-                db.ref(`games/${roomCode}/players/${myName}/powerCards`).push(pick);
-            
-            } else if (t === 'challenge') {
-                const c = CHALLENGES[Math.floor(Math.random()*CHALLENGES.length)];
-                alert(`CHALLENGE:\n${c.en}\n\n${c.bm}`);
-                logEvent(`${myName} Challenge: ${c.en}`);
-            }
-            else if (t === 'compete') {
-                const c = COMPETES[Math.floor(Math.random()*COMPETES.length)];
-                alert(`COMPETE:\n${c.en}\n\n${c.bm}`);
-                logEvent(`${myName} Competition: ${c.en}`);
-            }
-        }
-
-        function openPlayerSelect(cb, t="Select") {
-            playerSelectCallback = cb; document.getElementById('player-select-title').innerText = t;
-            const l = document.getElementById('player-list-container'); l.innerHTML = 'Loading...';
-            document.getElementById('modal-player-select').classList.remove('hidden'); document.getElementById('modal-player-select').classList.add('flex');
-            db.ref(`games/${roomCode}/players`).once('value', s => {
-                l.innerHTML = '';
-                s.forEach(c => {
-                    if(c.key !== myName && c.val().status !== "Dead") {
-                        const b = document.createElement('button');
-                        b.className = "w-full bg-[#27272a] p-4 rounded-xl flex justify-between items-center mb-2 hover:bg-white/5";
-                        b.innerHTML = `<span class="font-bold text-white">${c.key}</span><span class="material-icons-round text-purple-500">chevron_right</span>`;
-                        b.onclick = () => { closePlayerSelect(); if(playerSelectCallback) playerSelectCallback(c.key); };
-                        l.appendChild(b);
-                    }
-                });
-            });
-        }
-        function closePlayerSelect() { document.getElementById('modal-player-select').classList.add('hidden'); document.getElementById('modal-player-select').classList.remove('flex'); }
-        function performPay(t) {
-            const a = parseInt(prompt(`Pay ${t} amount:`));
-            if(a && myCash >= a) {
-                db.ref(`games/${roomCode}/players/${myName}/cash`).set(myCash-a);
-                db.ref(`games/${roomCode}/players/${t}/cash`).transaction(c => (c||0)+a);
-                db.ref(`games/${roomCode}/players/${t}/notification`).set({ message: `Received RM ${a} from ${myName}`, timestamp: Date.now() });
-                logEvent(`${myName} paid RM ${a} to ${t}`);
-            } else if (a) {
-                alert("Not enough cash!");
-            }
-        }
-        function performKill(t) {
-            if(confirm(`Kill ${t}?`)) {
-                db.ref(`games/${roomCode}/players/${t}/status`).set("Dead");
-                triggerGlobalAlert("EXECUTION", `PLAYER ${t} WAS ELIMINATED!`, "skull");
-                logEvent(`💀 ${t} was killed.`);
-                checkWinCondition();
-            }
-        }
-        
-        function performAccusation() {
-            openPlayerSelect(finalizeAccusation, "Accuse Witch");
-        }
-
-        function finalizeAccusation(suspect) {
-            if(!confirm(`Accuse ${suspect} of being the Witch?`)) return;
-
-            db.ref(`games/${roomCode}/players/${suspect}/role`).once('value', s => {
-                if(s.val() === "Witch") {
-                    triggerGlobalAlert("VICTORY", `MUGGLES WIN! ${myName} caught ${suspect}!`, "emoji_events");
-                } else {
-                    triggerGlobalAlert("WRONG ACCUSATION", `${myName} guessed wrong and died!`, "skull");
-                    db.ref(`games/${roomCode}/players/${myName}/status`).set("Dead");
-                    checkWinCondition();
-                }
-            });
-        }
-
-        function checkWinCondition() {
-            db.ref(`games/${roomCode}/players`).once('value', snap => {
-                let aliveCount = 0;
-                snap.forEach(p => {
-                    if (p.val().status !== "Dead") aliveCount++;
-                });
-                if (aliveCount <= 1) {
-                    triggerGlobalAlert("GAME OVER", "THE WITCH HAS ELIMINATED EVERYONE! EVIL WINS!", "skull");
-                    logEvent("🏆 THE WITCH WINS!");
-                }
-            });
-        }
-
-        function initiateHintPhase() { db.ref(`games/${roomCode}/hintPhase`).set({ active: true, timestamp: Date.now() }); }
-        
-        function listenForHintPhase() {
-            db.ref(`games/${roomCode}/hintPhase`).on('value', snap => {
-                if(!snap.exists()) return;
-                const data = snap.val();
-                if (data.active && (Date.now() - data.timestamp < 10000)) showHintModal();
-            });
-        }
-
-        function showHintModal() {
-            const modal = document.getElementById('modal-hint-phase');
-            const container = document.getElementById('hint-content-area');
-            const title = document.getElementById('hint-phase-title');
-            const desc = document.getElementById('hint-phase-desc');
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            container.innerHTML = '';
-
-            if (myRole === "Witch") {
-                title.innerText = "ISSUE A HINT"; title.classList.add("text-app-danger"); desc.innerText = "Select a question to answer about yourself.";
-                
-                // Add Open Grimoire Button
-                const invBtn = document.createElement('button');
-                invBtn.className = "w-full mb-4 bg-app-accent/20 border border-app-accent text-app-accent font-bold py-2 rounded-xl flex items-center justify-center gap-2";
-                invBtn.innerHTML = `<span class="material-icons-round">auto_stories</span> Open Grimoire`;
-                invBtn.onclick = () => openInventory();
-                container.appendChild(invBtn);
-
-                const indices = Array.from(Array(HINT_QUESTIONS.length).keys());
-                const shuffled = indices.sort(() => 0.5 - Math.random()).slice(0, 3);
-
-                shuffled.forEach(idx => {
-                    const q = HINT_QUESTIONS[idx];
-                    const btn = document.createElement('button');
-                    btn.className = "w-full bg-[#27272a] hover:bg-[#3f3f46] p-4 rounded-xl text-left border border-white/10 text-sm font-bold text-white mb-2";
-                    btn.innerHTML = `<div>${q.en}</div><div class="text-xs text-gray-400 italic mt-1">${q.bm}</div>`;
-                    
-                    btn.onclick = () => showMurdererInput(idx);
-                    container.appendChild(btn);
-                });
-            } else {
-                title.innerText = "SECURITY CHECK"; title.classList.remove("text-app-danger"); desc.innerText = "Solve this to verify connection.";
-                
-                const distractions = [
-                    "What is 8 + 5?", "Type 'MONEY' backwards", "What comes after Friday?", 
-                    "What is 10 x 2?", "Type 'WIZARD'", "What is 5 - 2?",
-                    "Type 'CASTLE' backwards", "Is fire hot? (Yes/No)", "Type 'GOLD'",
-                    "What comes after Tuesday?", "2 + 2 = ?", "Type 'MAGIC'"
-                ];
-                const task = distractions[Math.floor(Math.random() * distractions.length)];
-                
-                container.innerHTML = `<p class="text-xl font-bold text-white mb-4">${task}</p><input id="distraction-input" type="text" class="w-full bg-black/50 border border-white/20 rounded-xl p-3 text-white text-center outline-none mb-4"><button onclick="submitDistraction()" class="w-full bg-white text-black font-bold py-3 rounded-xl">VERIFY</button>`;
-            }
-        }
-
-        function showMurdererInput(idx) {
-            const q = HINT_QUESTIONS[idx];
-            const container = document.getElementById('hint-content-area');
-            container.innerHTML = `
-                <p class="text-sm font-bold text-app-danger mb-2">${q.en}</p>
-                <p class="text-xs text-gray-400 italic mb-4">${q.bm}</p>
-                <input id="murderer-answer" type="text" class="w-full bg-black/50 border border-app-danger rounded-xl p-3 text-white text-center outline-none mb-4" placeholder="Answer">
-                <button onclick="submitMurdererHint(${idx})" class="w-full bg-app-danger text-white font-bold py-3 rounded-xl mb-4">BROADCAST</button>
-                <button onclick="openInventory()" class="w-full bg-app-accent/20 border border-app-accent text-app-accent font-bold py-2 rounded-xl flex items-center justify-center gap-2"><span class="material-icons-round">auto_stories</span> Check Grimoire</button>
-            `;
-        }
-
-        function submitMurdererHint(idx) {
-            const ans = document.getElementById('murderer-answer').value;
-            if(!ans) return;
-            const q = HINT_QUESTIONS[idx].en;
-            logEvent(`🕵️ HINT: ${q} -> ${ans.toUpperCase()}`);
-            // Show Success and Return Button
-            const container = document.getElementById('hint-content-area');
-            container.innerHTML = `
-                <div class="py-8 flex flex-col items-center">
-                    <span class="material-icons-round text-4xl text-app-danger animate-pulse">campaign</span>
-                    <h3 class="text-lg font-bold text-white mt-4">HINT BROADCASTED</h3>
-                    <button onclick="closeHintModal()" class="mt-6 w-full bg-white text-black font-bold py-3 rounded-xl">RETURN TO GAME</button>
-                </div>
-            `;
-        }
-
-        function submitDistraction() {
-            document.getElementById('hint-content-area').innerHTML = `
-                <div class="py-8 flex flex-col items-center">
-                    <span class="material-icons-round text-4xl text-green-500 animate-bounce">check_circle</span>
-                    <h3 class="text-lg font-bold text-white mt-4">VERIFIED</h3>
-                    <button onclick="closeHintModal()" class="mt-6 w-full bg-white text-black font-bold py-3 rounded-xl">RETURN TO GAME</button>
-                </div>
-            `;
-        }
-
-        function closeHintModal() {
-            document.getElementById('modal-hint-phase').classList.add('hidden');
-            document.getElementById('modal-hint-phase').classList.remove('flex');
-        }
-
-        function incrementRound() {
-            db.ref(`games/${roomCode}/round`).transaction(r => (r || 1) + 1);
-        }
-
-        function logEvent(m) { db.ref(`games/${roomCode}/log`).push(m); }
-        function confirmExit() { if(confirm("Exit?")) switchView('view-home'); }
     </script>
 </body>
 </html>
